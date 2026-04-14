@@ -16,17 +16,20 @@ your-wiki/
 │   ├── papers, reports, notes, articles...
 │   └── source.notes.md    # Optional: integration guidance from /wiki-discover
 ├── wiki/                   # Layer 2: Compiled knowledge (LLM maintains)
-│   ├── index.md            # Master catalog of all pages
+│   ├── index.md            # Master catalog — agreed structure before content
 │   ├── scope.md            # Topic areas and coverage tracking
-│   ├── summaries/          # One summary per source
-│   ├── concepts/           # Concept articles with cross-references
-│   ├── entities/           # Organizations, tools, standards
-│   ├── comparisons/        # Side-by-side trade-off analyses
+│   ├── summaries/          # One summary per source (always present)
+│   ├── concepts/           # ┐
+│   ├── entities/           # ├ Starting set — extend with new directories
+│   ├── comparisons/        # │ as your domain requires (e.g., scenarios/,
+│   ├── ...                 # ┘ methods/, case-studies/)
 │   └── log.md              # Activity log
-├── wiki.config.md          # Domain description + quality rules
-├── CLAUDE.md               # Agent schema (how to operate the wiki)
+├── wiki.config.md          # Domain, writing approach, quality rules
+├── CLAUDE.md               # Agent schema — evolves with use
 └── mkdocs.yml              # Optional: web rendering config
 ```
+
+The directory structure is a recommended starting point, not a constraint. The `/wiki-init` structure discussion (Phase 3c) determines how YOUR wiki is organised — new page types and directories are added as the content demands. The schema (CLAUDE.md) evolves alongside.
 
 Every wiki page has YAML frontmatter (title, type, sources, related pages, tags, confidence, dates) and uses `[[wikilinks]]` for interlinking. The markdown files work in any renderer — Obsidian, VS Code, MkDocs, or plain text.
 
