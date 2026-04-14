@@ -131,7 +131,11 @@ If `scripts/wiki-check.ts` exists, run it: `bun run scripts/wiki-check.ts`. Othe
 
 If `wiki/scope.md` exists, update it: check off any topic areas now covered by this source. Update the coverage count.
 
-### Step 11: Log
+### Step 11: Schema reflection
+
+If this session revealed that CLAUDE.md or wiki.config.md needs updating — a new page type was needed, a naming convention was ambiguous, an operation step was missing, a frontmatter field was needed, or a quality rule was too strict or too loose — propose the specific change to the user.
+
+### Step 12: Log
 
 Append to `wiki/log.md`:
 

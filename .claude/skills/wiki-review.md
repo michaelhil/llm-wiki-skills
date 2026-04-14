@@ -198,7 +198,11 @@ Run these checks regardless of whether there was feedback. If `scripts/wiki-chec
 6. **Nav sync**: If `mkdocs.yml` exists, verify nav matches directory structure
 7. Fix any issues found
 
-### Step 10: Commit and log
+### Step 10: Schema reflection
+
+If this session revealed that CLAUDE.md or wiki.config.md needs updating — a new page type was needed, a naming convention was ambiguous, an operation step was missing, a frontmatter field was needed, or a quality rule was too strict or too loose — propose the specific change to the user.
+
+### Step 11: Commit and log
 
 1. Stage changes: `git add wiki/ feedback/`
 2. Commit with message referencing issue numbers: `"Process feedback batch <date> (Fixes #12, #15, ...)"`

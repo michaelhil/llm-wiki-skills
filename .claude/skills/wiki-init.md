@@ -121,7 +121,7 @@ The wiki's category structure should be agreed before content is created. This p
 
 Write the project's agent schema with these sections:
 
-1. **Title and description.** One paragraph. Reference `wiki.config.md` for domain context, writing approach, and quality rules — do not duplicate them in CLAUDE.md.
+1. **Title, description, and evolution note.** One paragraph. Reference `wiki.config.md` for domain context, writing approach, and quality rules — do not duplicate them in CLAUDE.md. State that this schema evolves: "When a session reveals better conventions or missing operations, propose updates to this file."
 
 2. **Directory structure.** Describe `raw/` (immutable sources, never modified) and `wiki/` (compiled knowledge) with its subdirectories: `summaries/`, `concepts/`, `entities/`, `comparisons/`. If feedback is enabled, also `feedback/`.
 
