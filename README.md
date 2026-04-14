@@ -107,12 +107,14 @@ For large sources (500+ lines), processes section by section. Handles source rev
 Run periodically (e.g., every few weeks).
 
 ```
-/wiki-review              # Auto-detect feedback source
-/wiki-review --github     # Process GitHub Issues
+/wiki-review              # Interactive: propose changes, owner approves
+/wiki-review --auto       # Automatic: apply all, review archive after
 /wiki-review --lint-only  # Just run maintenance checks
 ```
 
-Collects feedback from GitHub Issues, a markdown file, or pasted text. Evaluates each item against source material, updates pages, closes addressed issues, defers items requiring human judgment. Always includes a maintenance pass: lint, quality check, stale page detection, coverage gaps.
+Collects feedback from GitHub Issues, markdown files, or pasted text. Classifies each item as trivial (auto-applied) or substantive (proposed to the owner for approval). The owner reviews proposals grouped by page and approves, modifies, or skips each one. Only approved changes are written. Every decision is recorded in a batch archive.
+
+Always includes a maintenance pass: lint, quality check, stale page detection, coverage gaps.
 
 ## Quality system
 
@@ -151,7 +153,16 @@ bun run scripts/wiki-check.ts
 
 - **MkDocs Material** — browsable site with search, dark mode, and navigation
 - **GitHub Pages** — automatic deployment on push
-- **Per-section feedback** — readers click a 💬 icon on any section heading to submit corrections or suggestions. Submissions become GitHub Issues, processed in batches via `/wiki-review`
+- **Per-section feedback** — readers click a 💬 icon on any section heading to submit corrections or suggestions, without needing a GitHub account. A Vercel serverless function proxies submissions into GitHub Issues. The wiki owner processes feedback in batches via `/wiki-review`, with full editorial control over what changes are made.
+
+The feedback pipeline:
+```
+Reader clicks 💬 → popover form → Vercel function → GitHub Issue
+                                                         ↓
+Owner runs /wiki-review → Claude proposes changes → owner approves → wiki updated
+                                                         ↓
+                                                  Issue closed with explanation
+```
 
 These are enhancements. The wiki works fully without them — the core value is in the markdown files and their interlinking.
 

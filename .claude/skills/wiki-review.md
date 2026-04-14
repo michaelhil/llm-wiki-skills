@@ -1,12 +1,12 @@
 ---
 name: wiki-review
-description: Process accumulated feedback, update wiki pages, and run maintenance
+description: Process accumulated feedback with owner approval, update wiki pages, and run maintenance
 command: wiki-review
 ---
 
 # /wiki-review
 
-Process feedback from any source (GitHub Issues, a markdown file, or pasted text), update wiki pages accordingly, and run a maintenance pass.
+Process feedback from any source (GitHub Issues, a markdown file, or pasted text), propose changes for owner approval, execute approved changes, and run a maintenance pass.
 
 ## When to use
 
@@ -17,9 +17,10 @@ Process feedback from any source (GitHub Issues, a markdown file, or pasted text
 ## Arguments
 
 ```
-/wiki-review                      # Auto-detect feedback source
-/wiki-review --github             # Process open GitHub Issues labelled wiki-feedback
-/wiki-review --file feedback.md   # Process feedback from a markdown file
+/wiki-review                      # Interactive: propose changes, owner approves
+/wiki-review --auto               # Automatic: apply all changes, owner reviews archive after
+/wiki-review --github             # Source: GitHub Issues (default if gh CLI authenticated)
+/wiki-review --file feedback.md   # Source: markdown file
 /wiki-review --lint-only          # Skip feedback, just run maintenance
 ```
 
@@ -56,23 +57,79 @@ Parse each issue:
    - Target section unchanged → feedback is current
    - Target section changed → check if already addressed
    - Section deleted → mark stale
-3. Prioritize: corrections first, then missing content, then suggestions, then unclear
+3. Classify each item as **trivial** or **substantive**:
+   - **Trivial**: Adding a wikilink or cross-reference, fixing a typo-level error, adding a tag, formatting correction. These can be verified mechanically.
+   - **Substantive**: Changing factual content, rewriting a section, adding new claims, contradicting existing text, removing content. These require editorial judgment.
+4. Prioritize: corrections first, then missing content, then suggestions, then unclear
 
-### Step 3: Process each page
+### Step 3: Analyse each item
 
-For each page with actionable feedback:
+For each non-stale feedback item, read the target wiki page and determine:
+- What change is implied
+- Whether it's supported by sources in `raw/` (read the relevant source section if needed)
+- What the specific edit would be
 
-1. Read the current wiki page
-2. Read all feedback items for this page
-3. Evaluate each item:
-   - **Corrections**: Verify the claim against sources in `raw/`. If the feedback is right, fix the text. If the current text is supported by sources, note why it stands.
-   - **Missing content**: Add if supported by sources in `raw/`. If the requested content isn't in any source, note this — it may indicate a new source should be ingested.
-   - **Suggestions**: Incorporate if they improve the page without contradicting sources.
-   - **Unclear**: Rewrite the flagged section for clarity.
-4. Write the updated page
-5. **Immediately verify** the update meets quality rules from wiki.config.md
+This is analysis only — do not write any changes yet.
 
-### Step 4: Report per item
+### Step 4: Apply trivial changes
+
+Auto-apply trivial changes (link additions, cross-references, tag additions). Check each page against quality rules immediately after writing.
+
+Present a summary to the owner:
+
+```
+Auto-applied (trivial):
+  #18 concepts/hallucination — added [[trust-calibration]] to related links
+  #22 entities/nrc — added missing tag
+  #25 comparisons/rag-vs-fine-tuning — fixed wikilink syntax
+```
+
+### Step 5: Propose substantive changes
+
+**In interactive mode (default):**
+
+Present substantive proposals grouped by page. Use AskUserQuestion:
+
+```
+"Proposed changes to concepts/hallucination.md (2 items):"
+
+  #12 (correction) "understates the problem"
+   → Expand "Core Danger" section with LabSafety Bench data
+     Source support: Report 1 §5.1 cites this
+
+  #15 (missing) "no domain-specific benchmarks mentioned"
+   → Add paragraph on benchmark limitations
+     Source support: Report 1 §5.1 discusses this
+
+Options:
+  - Approve all for this page
+  - Review individually
+  - Skip page (leave issues open)
+```
+
+If "Review individually", present each item with:
+  - Approve (make this change)
+  - Modify (owner gives different direction — ask them how)
+  - Skip (keep issue open, no change)
+
+If "Modify": ask the owner what they want instead. Capture their direction verbatim — it goes in the batch archive.
+
+**In auto mode (`--auto`):**
+
+Skip this step. Apply all changes. Note "auto mode" in the batch archive.
+
+### Step 6: Execute approved changes
+
+Write pages for approved changes only. For each page:
+
+1. Read the current page
+2. Apply the approved changes (and any owner-modified directions)
+3. Write the updated page
+4. Immediately verify quality rules (word count, links, source paths)
+
+Skipped items remain as open issues.
+
+### Step 7: Close and comment on issues
 
 **For GitHub Issues:**
 
@@ -83,42 +140,55 @@ Change: <description of what was modified>."
 gh issue close <number>
 ```
 
-Unaddressable items:
+Owner-skipped items: leave open, no comment (owner may revisit later).
+
+Owner-deferred items (explicitly decided not to address):
 ```bash
-gh issue comment <number> --body "Reviewed but not addressed.
-Reason: <explanation>."
+gh issue comment <number> --body "Reviewed by wiki owner. Decision: not addressed.
+Reason: <owner's reason or 'editorial decision'>."
 gh issue edit <number> --add-label "needs-human-review"
 ```
 
 Stale items:
 ```bash
-gh issue comment <number> --body "This section was modified since your feedback. Please review the current version and resubmit if the issue persists."
+gh issue comment <number> --body "This section was modified since your feedback was submitted. Please review the current version and resubmit if the issue persists."
 gh issue close <number> --reason "not planned"
 ```
 
 **For file/text feedback:** Report results to the user — list each item and what was done.
 
-### Step 5: Write batch archive
+### Step 8: Write batch archive
 
-If feedback was processed, create `feedback/batch-<YYYY-MM-DD>.md`:
+Create `feedback/batch-<YYYY-MM-DD>.md`:
 
 ```yaml
 ---
 title: "Feedback Batch — <YYYY-MM-DD>"
 type: feedback-batch
 date: <YYYY-MM-DD>
+mode: interactive  # or "auto"
 items_total: <N>
 items_addressed: <N>
-items_deferred: <N>
+items_trivial_auto: <N>
+items_owner_modified: <N>
+items_skipped: <N>
 items_stale: <N>
 ---
 ```
 
-Body lists each item: source reference, page, section, feedback text, action taken, reason if deferred.
+Body lists each item with:
+- Feedback source (issue number / file line)
+- Page and section
+- Feedback text
+- Classification (trivial / substantive)
+- Proposed action
+- Owner decision (approved / modified / skipped / auto-applied)
+- Owner direction if modified (verbatim)
+- Final change made
 
-### Step 6: Maintenance pass
+### Step 9: Maintenance pass
 
-Run these checks regardless of whether there was feedback. If `scripts/wiki-check.ts` exists, start with `bun run scripts/wiki-check.ts` to get a full report. Then:
+Run these checks regardless of whether there was feedback. If `scripts/wiki-check.ts` exists, start with `bun run scripts/wiki-check.ts`. Then:
 
 1. **Lint**: Dead wikilinks, orphan pages, missing frontmatter
 2. **Quality**: Word counts against wiki.config.md minimums
@@ -128,21 +198,27 @@ Run these checks regardless of whether there was feedback. If `scripts/wiki-chec
 6. **Nav sync**: If `mkdocs.yml` exists, verify nav matches directory structure
 7. Fix any issues found
 
-### Step 7: Commit and log
+### Step 10: Commit and log
 
 1. Stage changes: `git add wiki/ feedback/`
-2. Commit with message referencing issue numbers if applicable
-3. Append to `wiki/log.md`
+2. Commit with message referencing issue numbers: `"Process feedback batch <date> (Fixes #12, #15, ...)"`
+3. Append to `wiki/log.md`:
+   ```
+   ## <YYYY-MM-DD> — Feedback batch
+   - Mode: interactive / auto
+   - Processed: N items (N addressed, N trivial auto-applied, N skipped, N stale)
+   - Pages modified: [list]
+   ```
 4. Push if remote is configured
 
 ## Key rules
 
-- **Read pages before updating** — understand current content before modifying.
-- **Don't blindly accept feedback** — verify corrections against sources in `raw/`. Feedback can be wrong.
-- **Don't delete information** — if there's genuine disagreement, note both positions with citations.
-- **Explain deferrals** — every unaddressed item gets a reason.
-- **The batch archive is permanent** — always write it, even for small batches.
-- **Maintenance is part of every review** — lint + quality check runs whether or not there was feedback.
-- **Source material is authoritative** — feedback contradicting verified sources should be deferred for human review.
+- **Propose before executing** (interactive mode) — the owner sees what Claude plans to do and approves, modifies, or skips. Claude does the analysis; the owner makes the decisions.
+- **Trivial changes don't need approval** — link additions, cross-references, and formatting fixes are auto-applied and reported. This keeps the approval burden proportional to change significance.
+- **Don't blindly accept feedback** — verify corrections against sources in `raw/`. Feedback can be wrong. Note this in the proposal.
+- **Don't delete information** — if there's genuine disagreement between feedback and sources, note both positions. Propose deferral for human review.
+- **Capture owner decisions** — the batch archive records what was proposed, what the owner decided, and why. This is the editorial audit trail.
+- **Source material is authoritative** — feedback contradicting verified sources should be proposed as a deferral, not as a change.
 - **Check quality immediately after each page update** — do not defer to the end.
+- **Maintenance runs every time** — lint + quality check happens whether or not there was feedback.
 - **Web view is optional** — nav sync only if `mkdocs.yml` exists.

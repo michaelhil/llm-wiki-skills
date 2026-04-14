@@ -126,11 +126,89 @@ If `scripts/wiki-check.ts` exists, run it: `bun run scripts/wiki-check.ts`. Othe
 - Create GitHub repo, enable Pages
 
 **If feedback system requested:**
-- Create `overrides/main.html` with per-section feedback icons and form
-- Create `api/feedback.ts` (Vercel serverless function)
-- Create `vercel.json`
-- Create GitHub Issue labels
-- Guide user through Vercel deploy and PAT creation
+
+Generate these files using the specs below, then walk the user through deployment.
+
+**A) Create `overrides/main.html`** — MkDocs theme override:
+- Inject `<meta name="wiki-version">` from `config.extra.wiki_version`
+- Add a `💬` icon to every `h2[id]` and `h3[id]` heading (appears on hover, beside Material's existing permalink icon)
+- On click: open a centered modal popover with: section title display, radio group (correction / suggestion / missing / unclear), required textarea for feedback, optional name field, submit button
+- Submit sends JSON POST to `config.extra.feedback_worker_url` with fields: `page`, `section`, `sectionTitle`, `category`, `feedback`, `submitter`, `wikiVersion`
+- On success: close popover, show "Thank you" toast
+- On error: re-enable submit button, show alert with error
+- 30-second debounce between submissions (prevent double-submit)
+- If no worker URL configured: demo mode (log to console)
+- Use Material theme CSS variables (`--md-default-bg-color`, `--md-primary-fg-color`, etc.) for dark mode compatibility
+- Close popover on Escape key or backdrop click
+
+**B) Create `api/feedback.ts`** — Vercel serverless function:
+- Default export: `async function handler(req, res)`
+- Validate JSON body: `page` (string, required), `section` (string), `sectionTitle` (string), `category` (one of: correction, suggestion, missing, unclear), `feedback` (string, 1-5000 chars), `submitter` (string), `wikiVersion` (string)
+- CORS: set `Access-Control-Allow-Origin` to the wiki's GitHub Pages URL only. Handle OPTIONS preflight with 204.
+- Reject requests from other origins with 403.
+- Read `GITHUB_PAT` from `process.env`. Return 500 if not set.
+- Create GitHub Issue via `fetch("https://api.github.com/repos/{REPO}/issues")`:
+  - Title: `[{page without .md}] {Category capitalised} — "{sectionTitle truncated to 60 chars}"`
+  - Body: `<!-- WIKI-FEEDBACK-META\npage: ...\nsection: ...\nsection_title: ...\ncategory: ...\nsubmitter: ...\nwiki_version: ...\ntimestamp: ...\n-->` (machine-parseable block) followed by human-readable section with page link, section, version, type, horizontal rule, feedback text, submitter
+  - Labels: `["wiki-feedback", "type:{category}", "page:{page-short-name}"]`
+- Return 201 on success, 400 on validation failure, 502 on GitHub API error
+
+**C) Create `vercel.json`**:
+```json
+{
+  "framework": null,
+  "buildCommand": "",
+  "outputDirectory": "",
+  "installCommand": "",
+  "functions": { "api/feedback.ts": { "maxDuration": 10 } }
+}
+```
+
+**D) Walk through deployment with the user** — these are interactive steps:
+
+```
+Step 1: Login to Vercel
+  npx vercel login
+  (Browser opens — user authorises)
+
+Step 2: Deploy
+  npx vercel deploy --prod --yes
+  (Note the deployment URL — e.g., https://project-name.vercel.app)
+
+Step 3: Create a fine-grained GitHub PAT
+  Open: github.com/settings/personal-access-tokens/new
+  - Token name: <project>-feedback
+  - Repository access: Only this repo
+  - Permissions: Issues → Read and write (nothing else)
+  - Generate and copy the token
+
+Step 4: Set PAT as Vercel environment variable
+  echo "<token>" | npx vercel env add GITHUB_PAT production
+
+Step 5: Redeploy with the env var
+  npx vercel deploy --prod --yes
+
+Step 6: Set Vercel URL as GitHub repo variable
+  gh variable set FEEDBACK_WORKER_URL --body "https://<project>.vercel.app/api/feedback"
+
+Step 7: Create GitHub Issue labels
+  gh label create wiki-feedback --color 0075ca --description "Feedback submitted via wiki"
+  gh label create "type:correction" --color d73a4a --description "Something is factually wrong"
+  gh label create "type:suggestion" --color a2eeef --description "Could be improved"
+  gh label create "type:missing" --color 7057ff --description "Content should exist but doesn't"
+  gh label create "type:unclear" --color fbca04 --description "Hard to understand"
+  gh label create "needs-human-review" --color e4e669 --description "Deferred for editorial decision"
+
+Step 8: Push to trigger GitHub Pages rebuild
+  git add -A && git commit -m "Set up feedback system" && git push
+
+Step 9: Test end-to-end
+  Visit a wiki page, hover a section heading, click 💬, submit test feedback
+  Verify: gh issue list --label wiki-feedback
+  Close test issue: gh issue close <number> --comment "Setup test"
+```
+
+Walk through each step with the user. If any step fails, debug before proceeding to the next.
 
 ### Phase 10: Report and next steps
 
