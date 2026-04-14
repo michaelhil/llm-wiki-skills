@@ -177,6 +177,19 @@ These are enhancements. The wiki works fully without them — the core value is 
 - **Content-first**: Web rendering is optional. The markdown files are the product.
 - **Quality-enforced**: Mechanical checks prevent the sparse pages and broken links that manual wiki maintenance produces.
 
+## Adopting for an existing wiki
+
+If your wiki was built before these skills existed:
+
+1. Copy skills into `.claude/skills/` and optionally `scripts/wiki-check.ts`
+2. Run `/wiki-review --lint-only` — checks wiki health and offers to create `wiki.config.md` if missing
+3. Optionally create `wiki/scope.md` to track topic coverage
+4. Use `/wiki-ingest` and `/wiki-discover` normally from here
+
+## Deleting pages and reorganising
+
+Page deletion and structural reorganisation are conversational operations — ask Claude directly. These are rare enough that formal skill steps would be over-engineering.
+
 ## Example
 
 The [Nuclear AI Wiki](https://github.com/michaelhil/nuclear-wiki) was built with these skills — 95 interlinked pages compiled from 6 technical reports on AI agent systems for nuclear power plant operations.

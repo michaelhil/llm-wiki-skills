@@ -50,7 +50,7 @@ Initialize git repo.
 
 ### Phase 3: Generate wiki.config.md
 
-Write `wiki.config.md` using the answers from Phase 1:
+Write `wiki.config.md` with three sections, using the answers from Phase 1:
 
 ```markdown
 # Wiki Configuration
@@ -60,12 +60,27 @@ Write `wiki.config.md` using the answers from Phase 1:
 explanation is appropriate. This description is used to check whether new
 sources are relevant and to guide the tone and depth of wiki pages.>
 
+## Writing Approach
+<One of two approaches — infer from the domain description, then confirm
+with the user: "I've set the writing approach to [X]. Change?">
+
+Source compilation: Pages compile what the sources say. Every factual
+claim references a specific source in raw/. Do not add beyond sources.
+
+OR
+
+Comprehensive reference: Write each concept page as a standalone reference
+article. Sources in raw/ provide the foundation — cite them in frontmatter.
+Supplement with established knowledge, citing original works inline.
+Each concept page should cover: definition and mechanism, significance,
+current evidence, practical implications, connections to related concepts,
+open questions, examples from multiple domains.
+
 ## Quality Rules
 - Summary pages: minimum 300 words
 - Concept pages: minimum 200 words, link to >= 3 related pages
 - Entity pages: minimum 120 words, must explain domain relevance
 - Comparison pages: minimum 250 words, must include a comparison table
-- Every factual claim references a source in frontmatter
 - Source paths in frontmatter must match actual files in raw/
 - Lint must pass after every phase (zero dead links, zero orphans)
 ```
@@ -104,14 +119,30 @@ The wiki's category structure should be agreed before content is created. This p
 
 ### Phase 4: Generate CLAUDE.md
 
-Write the agent schema defining:
+Write the project's agent schema with these sections:
 
-- Directory structure and purpose of each layer
-- Page format (YAML frontmatter spec: title, type, sources, related, tags, confidence, created, updated)
-- Naming conventions (kebab-case, type-based prefixes for summaries)
-- Wikilink style (`[[page-name]]`)
-- Operations: INGEST, QUERY, LINT, UPDATE, PROCESS FEEDBACK
-- Writing guidelines adapted to the domain and audience
+1. **Title and description.** One paragraph. Reference `wiki.config.md` for domain context, writing approach, and quality rules — do not duplicate them in CLAUDE.md.
+
+2. **Directory structure.** Describe `raw/` (immutable sources, never modified) and `wiki/` (compiled knowledge) with its subdirectories: `summaries/`, `concepts/`, `entities/`, `comparisons/`. If feedback is enabled, also `feedback/`.
+
+3. **Page format.** YAML frontmatter spec — every wiki page MUST have:
+   - `title` (string), `type` (one of: concept, entity, summary, comparison)
+   - `sources` (list of paths relative to project root, e.g., `raw/reports/paper.md`)
+   - `related` (list of `[[wikilinks]]` to other pages)
+   - `tags` (list of lowercase keywords)
+   - `confidence` (high | medium | low)
+   - `created` (date), `updated` (date)
+
+4. **Naming conventions.** Kebab-case filenames. Summaries: `summary-<short-name>.md`. No spaces, no underscores.
+
+5. **Interlinking.** Use `[[page-name]]` wikilinks without file extension. Cross-reference liberally.
+
+6. **Operations.** Define procedures for:
+   - INGEST: read source → extract → write pages → update index → lint → log
+   - QUERY: read index → find relevant pages → synthesise answer with citations
+   - LINT: dead links, orphans, missing frontmatter, source path validation
+   - UPDATE: update dates, note contradictions, preserve history, log changes
+   - PROCESS FEEDBACK (if feedback enabled): retrieve issues → analyse → propose → execute approved → archive
 
 ### Phase 5: Copy sources to raw/
 
@@ -128,11 +159,12 @@ Pick the source that best represents the wiki's scope (ask the user if unclear).
 
 **STOP after the first source.** Do not attempt to ingest all sources in one session.
 
-### Phase 7: Build index
+### Phase 7: Populate index
 
-1. Generate `wiki/index.md` organized by page type and topic
-2. If web view: generate `wiki/glossary.md` and the `nav:` section of `mkdocs.yml`
-3. Write the initial `wiki/log.md` entry
+1. If a skeleton index exists from Phase 3c: populate it with `[[wikilinks]]` to the pages created during ingestion, replacing the italic placeholders. Keep empty sections for topic areas not yet covered — they show what's still missing.
+2. If no skeleton exists (Phase 3c was skipped for a small wiki): generate `wiki/index.md` from the created pages, organized by type and topic.
+3. If web view: generate `wiki/glossary.md` and the `nav:` section of `mkdocs.yml`
+4. Write the initial `wiki/log.md` entry
 
 ### Phase 8: Quality check
 
