@@ -37,6 +37,10 @@ The wiki must already exist with a `CLAUDE.md` agent schema. If `wiki.config.md`
 3. List existing page NAMES: `ls wiki/**/*.md` — know what exists (do not read all page content yet; read individual pages only when needed for merging)
 4. Read `wiki/index.md` — current wiki structure (including skeleton headings for where to place new pages)
 5. Read `wiki/scope.md` if it exists — know what topic areas are defined and which are covered
+6. **Check for content directories**: `ls wiki/` (excluding summaries/, and files like index.md, scope.md, log.md, glossary.md, tags.md). If no content directories exist, the wiki structure hasn't been discussed yet. Ask the user:
+   > "No content directories found — the wiki structure hasn't been discussed yet."
+   - **Discuss structure now** — propose categories based on sources in `raw/` and domain description, agree with user, create directories (follow the STRUCTURE DISCUSSION operation from CLAUDE.md). Then proceed with ingestion.
+   - **Place pages in wiki/ root** — flat structure, fine for small wikis. Proceed with ingestion directly.
 
 ### Step 2: Prepare source
 

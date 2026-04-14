@@ -31,14 +31,7 @@ Collaboratively explore a domain, find relevant sources, evaluate their fit, and
 
 **If wiki exists but no `scope.md`:** Generate one from the current index — list covered topic areas, ask the user what's missing or out of scope. Write `wiki/scope.md`.
 
-**If no wiki exists at all:**
-1. Ask the user about domain and audience (same questions as `/wiki-init` Phase 1)
-2. Scaffold directory structure: create project directory, `raw/`, `wiki/`
-3. Generate `wiki.config.md` with Domain, Writing Approach (ask user: source compilation or comprehensive reference?), and Quality Rules — same spec as `/wiki-init` Phase 3
-4. Generate `CLAUDE.md` agent schema — same structural spec as `/wiki-init` Phase 4
-5. Collaboratively define initial topic areas — suggest categories based on the domain, let the user refine
-6. Propose a category structure and write a skeleton `wiki/index.md` with agreed headings (same process as `/wiki-init` Phase 3c)
-7. Write `wiki/scope.md` with the agreed topic areas
+**If no wiki exists at all:** "No wiki project found. Run `/wiki-init` first to create the project, then use `/wiki-discover` to find sources."
 
 ### Scope file format
 

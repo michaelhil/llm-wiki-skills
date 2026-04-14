@@ -2,11 +2,11 @@
 
 Four [Claude Code](https://docs.anthropic.com/en/docs/claude-code) skills for building and maintaining **LLM-wikis** — structured knowledge bases where an LLM compiles raw source material into interlinked markdown pages that serve both human readers and AI agents. Based on [Karpathy's LLM-wiki architecture](https://gist.github.com/karpathy/442a6bf555914893e9891c11519de94f).
 
-## Two ways to start
+## Getting started
 
-**Have material already?** → `/wiki-init` scaffolds the wiki and compiles your documents.
+**Always start with `/wiki-init`** — it creates the wiki project, with or without initial material.
 
-**Have a topic but no material?** → `/wiki-discover` helps you find, evaluate, and acquire sources through collaborative research.
+Then populate: `/wiki-discover` to find sources, `/wiki-ingest` to process them, `/wiki-review` to maintain quality.
 
 ## What it builds
 
@@ -78,17 +78,17 @@ Collaboratively defines the wiki's scope, searches for relevant sources, evaluat
 
 Can bootstrap a wiki from scratch — creates the project structure if none exists.
 
-### `/wiki-init` — Create a wiki from existing material
+### `/wiki-init` — Set up a new wiki project
 
-Start here if you already have documents. Run once per project.
+**Always start here.** Run once per project. Works with or without initial source material.
 
 ```
 /wiki-init
 ```
 
-Asks about domain, audience, and sources. Scaffolds the directory structure, generates the agent schema, copies sources, and ingests the **first source** thoroughly as a quality template. Optionally sets up MkDocs, GitHub Pages, and a per-section feedback system.
+Asks about domain, audience, and sources (optional). Scaffolds the directory structure, discusses category organization (or defers for later exploration), generates the agent schema, and optionally sets up MkDocs, GitHub Pages, and feedback. If sources are provided and structure is agreed, ingests the first source as a quality template.
 
-Remaining sources are ingested one at a time via `/wiki-ingest` — this prevents quality degradation from context exhaustion.
+Structure discussion can be deferred — useful when you want to explore the field via `/wiki-discover` before committing to categories.
 
 ### `/wiki-ingest` — Add or update a source
 
