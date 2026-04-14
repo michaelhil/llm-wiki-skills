@@ -32,10 +32,10 @@ The wiki must already exist with a `CLAUDE.md` agent schema. If `wiki.config.md`
 
 ### Step 1: Read context
 
-1. Read `wiki.config.md` — domain description and quality rules
+1. Read `wiki.config.md` — domain description, writing approach, and quality rules
 2. Read `CLAUDE.md` — page format, naming conventions, frontmatter spec
 3. List existing page NAMES: `ls wiki/**/*.md` — know what exists (do not read all page content yet; read individual pages only when needed for merging)
-4. Read `wiki/index.md` — current wiki structure
+4. Read `wiki/index.md` — current wiki structure (including skeleton headings for where to place new pages)
 5. Read `wiki/scope.md` if it exists — know what topic areas are defined and which are covered
 
 ### Step 2: Prepare source
@@ -102,7 +102,7 @@ For EACH page, **immediately after writing it**, verify:
 **New page path:**
 - File: `wiki/<type>/<kebab-case-name>.md`
 - YAML frontmatter with all required fields
-- Content: definition, significance, how it works, domain implications
+- **Follow the Writing Approach from wiki.config.md.** If it specifies structural elements for this page type (e.g., definition, evidence, implications, open questions), include each element. If no Writing Approach section exists, default to source-bounded writing (extract what the source says, cite everything).
 - Related links to at least 3 other pages
 
 **Merge path (existing page):**
@@ -113,8 +113,9 @@ Read the existing page. Read the new source material for this topic. **Rewrite t
 1. Read current `wiki/index.md`
 2. Add entries for all new pages in appropriate sections
 3. If the source introduces a new topic area, add a new section
-4. If `wiki/glossary.md` exists, add any new terms
-5. If `mkdocs.yml` exists, regenerate its `nav:` section from the directory structure
+4. If a new page doesn't fit any existing index section, ask the user whether to create a new section or place it under the closest existing one
+5. If `wiki/glossary.md` exists, add any new terms
+6. If `mkdocs.yml` exists, regenerate its `nav:` section from the directory structure
 
 ### Step 9: Lint
 

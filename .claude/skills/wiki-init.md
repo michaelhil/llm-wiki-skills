@@ -74,6 +74,34 @@ sources are relevant and to guide the tone and depth of wiki pages.>
 
 Based on the source material, identify the major topic areas the wiki will cover. Write `wiki/scope.md` with checkboxes for each area. This file tracks coverage and prevents scope creep during future `/wiki-discover` sessions. Mark all topics as uncovered initially — they'll be checked off as sources are ingested.
 
+### Phase 3c: Discuss and agree wiki structure
+
+The wiki's category structure should be agreed before content is created. This prevents expensive reorganisation later.
+
+1. **Scan source material** — read the table of contents or first ~10 lines of each source (not full content). Combined with the domain description and scope.md topic areas, propose a hierarchical category structure: top-level sections, subsections, and a brief note on what content goes under each.
+
+2. **Present to user.** Use AskUserQuestion for clear binary choices ("Should trust and automation bias be one section or two?"). Refine through conversation — the user may merge, split, add, or remove categories.
+
+3. **Keep it proportional.** If the user accepts the proposal as-is, that's one round and done. Don't force multiple iterations. For small wikis (fewer than 3 sources), this discussion can be skipped — structure will be obvious from content.
+
+4. **Write `wiki/index.md` as a skeleton** with the agreed headings and italic placeholders:
+   ```markdown
+   # Wiki Title
+
+   ## Foundations
+   ### Cognitive Science
+   *Pages to be added during ingestion.*
+
+   ### LLM Technology and Agents
+   *Pages to be added during ingestion.*
+
+   ## Human-AI Interaction
+   ### Trust and Reliance
+   *Pages to be added during ingestion.*
+   ```
+
+   This skeleton guides all subsequent ingestion — new pages are placed under these headings. Empty sections show what's still missing.
+
 ### Phase 4: Generate CLAUDE.md
 
 Write the agent schema defining:

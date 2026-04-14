@@ -35,6 +35,7 @@ Collaboratively explore a domain, find relevant sources, evaluate their fit, and
 1. Ask the user about domain and audience (same questions as `/wiki-init` Phase 1)
 2. Scaffold minimal structure: create project directory, `raw/`, `wiki/`, `wiki.config.md`, `CLAUDE.md`
 3. Collaboratively define initial topic areas — suggest categories based on the domain, let the user refine
+4. Propose a category structure and write a skeleton `wiki/index.md` with agreed headings (same process as `/wiki-init` Phase 3c). This structures the wiki before any sources are acquired.
 4. Write `wiki/scope.md` with the agreed topic areas
 
 ### Scope file format
