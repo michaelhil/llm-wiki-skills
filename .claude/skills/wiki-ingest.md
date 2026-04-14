@@ -100,8 +100,9 @@ For EACH page, **immediately after writing it**, verify:
 - If it fails any check, fix it before moving to the next page
 
 **New page path:**
-- File: `wiki/<type>/<kebab-case-name>.md`
-- YAML frontmatter with all required fields
+- Place in the appropriate content directory per the wiki's agreed structure (read existing directories via `ls wiki/`). If the wiki has no content directories (only summaries/), place in `wiki/` root.
+- If a page doesn't fit any existing directory, ask the user whether to create a new directory or place it in the closest match.
+- YAML frontmatter with all required fields. The `type:` field should match one of the types defined in wiki.config.md's quality rules (summary is always valid; others per this wiki's structure).
 - **Follow the Writing Approach from wiki.config.md.** If it specifies structural elements for this page type (e.g., definition, evidence, implications, open questions), include each element. If no Writing Approach section exists, default to source-bounded writing (extract what the source says, cite everything).
 - Related links to at least 3 other pages
 

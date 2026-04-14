@@ -16,13 +16,11 @@ your-wiki/
 │   ├── papers, reports, notes, articles...
 │   └── source.notes.md    # Optional: integration guidance from /wiki-discover
 ├── wiki/                   # Layer 2: Compiled knowledge (LLM maintains)
-│   ├── index.md            # Master catalog — agreed structure before content
+│   ├── index.md            # Master catalog — structure agreed before content
 │   ├── scope.md            # Topic areas and coverage tracking
 │   ├── summaries/          # One summary per source (always present)
-│   ├── concepts/           # ┐
-│   ├── entities/           # ├ Starting set — extend with new directories
-│   ├── comparisons/        # │ as your domain requires (e.g., scenarios/,
-│   ├── ...                 # ┘ methods/, case-studies/)
+│   ├── <your-types>/       # Content directories agreed in structure discussion
+│   ├── ...                 # (e.g., theories/, methods/, tools/, standards/)
 │   └── log.md              # Activity log
 ├── wiki.config.md          # Domain, writing approach, quality rules
 ├── CLAUDE.md               # Agent schema — evolves with use

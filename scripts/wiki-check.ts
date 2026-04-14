@@ -27,22 +27,18 @@ const wikiDir = join(projectRoot, "wiki")
 const rawDir = join(projectRoot, "raw")
 const configPath = join(projectRoot, "wiki.config.md")
 
-// --- Defaults (overridden by wiki.config.md if present) ---
+// --- Quality rules (parsed dynamically from wiki.config.md) ---
 
 interface QualityRules {
-  summaryMin: number
-  conceptMin: number
-  entityMin: number
-  comparisonMin: number
-  conceptLinkMin: number
+  typeMinimums: Map<string, number>
+  linkMin: number
+  linkTypes: Set<string>
 }
 
 const defaultRules: QualityRules = {
-  summaryMin: 300,
-  conceptMin: 200,
-  entityMin: 120,
-  comparisonMin: 250,
-  conceptLinkMin: 3,
+  typeMinimums: new Map([["summary", 300]]),
+  linkMin: 3,
+  linkTypes: new Set<string>(),
 }
 
 // --- Helpers ---
@@ -108,18 +104,25 @@ const extractWikilinks = (content: string): string[] => {
 const parseConfig = async (): Promise<QualityRules> => {
   try {
     const content = await readFile(configPath, "utf-8")
-    const rules = { ...defaultRules }
-    const summaryMatch = content.match(/[Ss]ummary.*?(\d+)\s*words/)
-    const conceptMatch = content.match(/[Cc]oncept.*?(\d+)\s*words/)
-    const entityMatch = content.match(/[Ee]ntity.*?(\d+)\s*words/)
-    const compMatch = content.match(/[Cc]omparison.*?(\d+)\s*words/)
-    const linkMatch = content.match(/link.*?>=?\s*(\d+)/)
-    if (summaryMatch) rules.summaryMin = parseInt(summaryMatch[1])
-    if (conceptMatch) rules.conceptMin = parseInt(conceptMatch[1])
-    if (entityMatch) rules.entityMin = parseInt(entityMatch[1])
-    if (compMatch) rules.comparisonMin = parseInt(compMatch[1])
-    if (linkMatch) rules.conceptLinkMin = parseInt(linkMatch[1])
-    return rules
+    const typeMinimums = new Map<string, number>()
+    const linkTypes = new Set<string>()
+    let linkMin = 3
+
+    // Parse ALL "X pages: minimum N words" patterns dynamically
+    for (const m of content.matchAll(/(\w[\w-]*)\s+pages?.*?(?:minimum|min)\s+(\d+)\s*words/gi)) {
+      typeMinimums.set(m[1].toLowerCase(), parseInt(m[2]))
+    }
+
+    // Parse link requirements: "X pages: ... link to >= N"
+    for (const m of content.matchAll(/(\w[\w-]*)\s+pages?.*?link.*?>=?\s*(\d+)/gi)) {
+      linkTypes.add(m[1].toLowerCase())
+      linkMin = parseInt(m[2])
+    }
+
+    // Ensure summary has a default if not specified
+    if (!typeMinimums.has("summary")) typeMinimums.set("summary", 300)
+
+    return { typeMinimums, linkMin, linkTypes }
   } catch {
     return defaultRules
   }
@@ -185,29 +188,24 @@ const run = async () => {
       }
     }
 
-    // --- Word count checks ---
-    const pageType = fm.type as string
-    const minWords =
-      pageType === "summary" ? rules.summaryMin :
-      pageType === "concept" ? rules.conceptMin :
-      pageType === "entity" ? rules.entityMin :
-      pageType === "comparison" ? rules.comparisonMin :
-      0
+    // --- Word count checks (dynamic — reads any type from wiki.config.md) ---
+    const pageType = (fm.type as string ?? "").toLowerCase()
+    const minWords = rules.typeMinimums.get(pageType) ?? 0
 
     if (minWords > 0 && words < minWords) {
       issues.push({
         severity: "warning",
         category: "SPARSE",
-        message: `${relPath}: ${words} words (minimum: ${minWords})`,
+        message: `${relPath}: ${words} words (minimum: ${minWords} for ${pageType})`,
       })
     }
 
-    // --- Link density check (concepts) ---
-    if (pageType === "concept" && links.length < rules.conceptLinkMin) {
+    // --- Link density check (for types that require it per wiki.config.md) ---
+    if (rules.linkTypes.has(pageType) && links.length < rules.linkMin) {
       issues.push({
         severity: "warning",
         category: "LOW_LINKS",
-        message: `${relPath}: ${links.length} wikilinks (minimum: ${rules.conceptLinkMin})`,
+        message: `${relPath}: ${links.length} wikilinks (minimum: ${rules.linkMin} for ${pageType})`,
       })
     }
   }

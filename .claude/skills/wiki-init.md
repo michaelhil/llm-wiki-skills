@@ -28,105 +28,85 @@ Ask the user these questions (skip any already answered):
 5. **Set up web view?** (MkDocs Material for browsable site — yes/no)
 6. **Set up GitHub Pages + feedback system?** (only if web view is yes)
 
-### Phase 2: Scaffold structure
+### Phase 2: Scaffold
 
-Create the project directory:
+Create the minimal project structure:
 
 ```
 <project-name>/
 ├── raw/                    # Layer 1: Immutable sources
 ├── wiki/                   # Layer 2: Compiled knowledge
-│   ├── index.md
-│   ├── scope.md            # Topic areas and coverage tracking
-│   └── log.md
-├── wiki.config.md          # Domain context + quality rules
+│   └── summaries/          # One summary per source (always present)
 └── .gitignore
 ```
 
-If web view requested, also create: `mkdocs.yml`, `wiki/glossary.md`, `wiki/tags.md`.
-If feedback requested, also create: `feedback/`.
+No content directories yet — those are created in Phase 3. Initialize git repo.
 
-Initialize git repo.
+### Phase 3: Discuss and agree wiki structure
 
-### Phase 3: Generate wiki.config.md
+The wiki's content directories, page types, and quality rules should be agreed before anything is generated. This phase is the most important planning step.
 
-Write `wiki.config.md` with three sections, using the answers from Phase 1:
+1. **Scan source material** — read the table of contents or first ~10 lines of each source (not full content). Combined with the domain description from Phase 1, propose:
+   - **Content directories** and their corresponding page types. Examples by domain:
+     - Human factors wiki: `theories/`, `methods/`, `failure-modes/`, `tools/`
+     - Regulatory wiki: `frameworks/`, `standards/`, `requirements/`, `case-studies/`
+     - General technical wiki: `concepts/`, `entities/`, `comparisons/`
+     - The traditional Karpathy categories (concepts, entities, comparisons) are ONE option, not the default — propose what fits the domain
+   - **Index structure** — top-level sections and subsections
+
+2. **Present to user.** Use AskUserQuestion for clear choices. Refine through conversation — the user may rename, merge, split, add, or remove categories.
+
+3. **Keep it proportional.** If the user accepts the proposal, one round and done. For small wikis (fewer than 3 sources), a single content directory (e.g., `articles/`) may be sufficient.
+
+4. **Define quality rules per type.** For each agreed page type, propose a word count minimum and any structural requirements (e.g., "must include a comparison table", "must link to >= 3 related pages"). Propose sensible defaults — 300 words for substantial types, 150 for reference/short types. User confirms.
+
+5. **Create the agreed directories** in `wiki/`.
+
+6. **Write `wiki/index.md` as a skeleton** with the agreed headings and italic placeholders:
+   ```markdown
+   # Wiki Title
+
+   ## [Section Name]
+   ### [Subsection]
+   *Pages to be added during ingestion.*
+   ```
+
+### Phase 4: Generate config files
+
+With the structure agreed, generate all config files at once:
+
+**A) `wiki.config.md`:**
 
 ```markdown
 # Wiki Configuration
 
 ## Domain
-<Free-text description: what the wiki covers, who reads it, what level of
-explanation is appropriate. This description is used to check whether new
-sources are relevant and to guide the tone and depth of wiki pages.>
+<Free-text from Phase 1: what the wiki covers, who reads it, what level
+of explanation is appropriate.>
 
 ## Writing Approach
-<One of two approaches — infer from the domain description, then confirm
-with the user: "I've set the writing approach to [X]. Change?">
-
-Source compilation: Pages compile what the sources say. Every factual
-claim references a specific source in raw/. Do not add beyond sources.
-
-OR
-
-Comprehensive reference: Write each concept page as a standalone reference
-article. Sources in raw/ provide the foundation — cite them in frontmatter.
-Supplement with established knowledge, citing original works inline.
-Each concept page should cover: definition and mechanism, significance,
-current evidence, practical implications, connections to related concepts,
-open questions, examples from multiple domains.
+<Confirm with user — "Should pages compile only what sources say, or be
+comprehensive reference articles drawing on broader knowledge?">
 
 ## Quality Rules
 - Summary pages: minimum 300 words
-- Concept pages: minimum 200 words, link to >= 3 related pages
-- Entity pages: minimum 120 words, must explain domain relevance
-- Comparison pages: minimum 250 words, must include a comparison table
+<One rule per type agreed in Phase 3, e.g.:>
+- [Type] pages: minimum [N] words
+- [Type] pages: minimum [N] words, link to >= 3 related pages
 - Source paths in frontmatter must match actual files in raw/
 - Lint must pass after every phase (zero dead links, zero orphans)
 ```
 
-### Phase 3b: Generate wiki/scope.md
+**B) `wiki/scope.md`** — topic areas from the Phase 3 discussion with checkboxes. Mark all as uncovered initially.
 
-Based on the source material, identify the major topic areas the wiki will cover. Write `wiki/scope.md` with checkboxes for each area. This file tracks coverage and prevents scope creep during future `/wiki-discover` sessions. Mark all topics as uncovered initially — they'll be checked off as sources are ingested.
+**C) `CLAUDE.md`** — the agent schema with these sections:
 
-### Phase 3c: Discuss and agree wiki structure
+1. **Title, description, and evolution note.** One paragraph. Reference `wiki.config.md` for domain context, writing approach, and quality rules. State that this schema evolves: "When a session reveals better conventions or missing operations, propose updates to this file."
 
-The wiki's category structure should be agreed before content is created. This prevents expensive reorganisation later.
-
-1. **Scan source material** — read the table of contents or first ~10 lines of each source (not full content). Combined with the domain description and scope.md topic areas, propose a hierarchical category structure: top-level sections, subsections, and a brief note on what content goes under each.
-
-2. **Present to user.** Use AskUserQuestion for clear binary choices ("Should trust and automation bias be one section or two?"). Refine through conversation — the user may merge, split, add, or remove categories.
-
-3. **Keep it proportional.** If the user accepts the proposal as-is, that's one round and done. Don't force multiple iterations. For small wikis (fewer than 3 sources), this discussion can be skipped — structure will be obvious from content.
-
-4. **Write `wiki/index.md` as a skeleton** with the agreed headings and italic placeholders:
-   ```markdown
-   # Wiki Title
-
-   ## Foundations
-   ### Cognitive Science
-   *Pages to be added during ingestion.*
-
-   ### LLM Technology and Agents
-   *Pages to be added during ingestion.*
-
-   ## Human-AI Interaction
-   ### Trust and Reliance
-   *Pages to be added during ingestion.*
-   ```
-
-   This skeleton guides all subsequent ingestion — new pages are placed under these headings. Empty sections show what's still missing.
-
-### Phase 4: Generate CLAUDE.md
-
-Write the project's agent schema with these sections:
-
-1. **Title, description, and evolution note.** One paragraph. Reference `wiki.config.md` for domain context, writing approach, and quality rules — do not duplicate them in CLAUDE.md. State that this schema evolves: "When a session reveals better conventions or missing operations, propose updates to this file."
-
-2. **Directory structure.** Describe `raw/` (immutable sources, never modified) and `wiki/` (compiled knowledge) with its subdirectories: `summaries/`, `concepts/`, `entities/`, `comparisons/`. If feedback is enabled, also `feedback/`.
+2. **Directory structure.** Describe `raw/` (immutable sources) and `wiki/` with its subdirectories: `summaries/` plus the content directories agreed in Phase 3. If feedback is enabled, also `feedback/`.
 
 3. **Page format.** YAML frontmatter spec — every wiki page MUST have:
-   - `title` (string), `type` (one of: concept, entity, summary, comparison)
+   - `title` (string), `type` (one of the types agreed in Phase 3 — summary is always valid; others per this wiki's structure)
    - `sources` (list of paths relative to project root, e.g., `raw/reports/paper.md`)
    - `related` (list of `[[wikilinks]]` to other pages)
    - `tags` (list of lowercase keywords)
@@ -153,7 +133,7 @@ Copy all source files into `raw/`. Preserve original filenames. If there are nat
 Pick the source that best represents the wiki's scope (ask the user if unclear). Ingest it following the full `/wiki-ingest` process:
 
 1. Read it completely
-2. Extract concepts, entities, relationships, comparisons
+2. Extract based on the agreed page types and structure from Phase 3
 3. Write all pages with full detail — check each page against quality rules IMMEDIATELY after writing
 4. This first source sets the quality bar for all subsequent ingestions
 
@@ -161,8 +141,8 @@ Pick the source that best represents the wiki's scope (ask the user if unclear).
 
 ### Phase 7: Populate index
 
-1. If a skeleton index exists from Phase 3c: populate it with `[[wikilinks]]` to the pages created during ingestion, replacing the italic placeholders. Keep empty sections for topic areas not yet covered — they show what's still missing.
-2. If no skeleton exists (Phase 3c was skipped for a small wiki): generate `wiki/index.md` from the created pages, organized by type and topic.
+1. If a skeleton index exists from Phase 3: populate it with `[[wikilinks]]` to the pages created during ingestion, replacing the italic placeholders. Keep empty sections for topic areas not yet covered.
+2. If no skeleton exists (Phase 3 was skipped for a small wiki): generate `wiki/index.md` from the created pages, organized by type and topic.
 3. If web view: generate `wiki/glossary.md` and the `nav:` section of `mkdocs.yml`
 4. Write the initial `wiki/log.md` entry
 
@@ -176,7 +156,7 @@ If `scripts/wiki-check.ts` exists, run it: `bun run scripts/wiki-check.ts`. Othe
 
 ### Phase 9: Infrastructure (conditional)
 
-**If web view requested** (Phase 5 in mkdocs.yml generation):
+**If web view requested:**
 - Create MkDocs Material configuration with search, roamlinks, dark mode toggle
 - `mkdocs build` to verify
 
@@ -198,7 +178,7 @@ Generate these files using the specs below, then walk the user through deploymen
 - On error: re-enable submit button, show alert with error
 - 30-second debounce between submissions (prevent double-submit)
 - If no worker URL configured: demo mode (log to console)
-- Use Material theme CSS variables (`--md-default-bg-color`, `--md-primary-fg-color`, etc.) for dark mode compatibility
+- Use Material theme CSS variables for dark mode compatibility
 - Close popover on Escape key or backdrop click
 
 **B) Create `api/feedback.ts`** — Vercel serverless function:
@@ -209,7 +189,7 @@ Generate these files using the specs below, then walk the user through deploymen
 - Read `GITHUB_PAT` from `process.env`. Return 500 if not set.
 - Create GitHub Issue via `fetch("https://api.github.com/repos/{REPO}/issues")`:
   - Title: `[{page without .md}] {Category capitalised} — "{sectionTitle truncated to 60 chars}"`
-  - Body: `<!-- WIKI-FEEDBACK-META\npage: ...\nsection: ...\nsection_title: ...\ncategory: ...\nsubmitter: ...\nwiki_version: ...\ntimestamp: ...\n-->` (machine-parseable block) followed by human-readable section with page link, section, version, type, horizontal rule, feedback text, submitter
+  - Body: `<!-- WIKI-FEEDBACK-META\npage: ...\nsection: ...\nsection_title: ...\ncategory: ...\nsubmitter: ...\nwiki_version: ...\ntimestamp: ...\n-->` followed by human-readable section
   - Labels: `["wiki-feedback", "type:{category}", "page:{page-short-name}"]`
 - Return 201 on success, 400 on validation failure, 502 on GitHub API error
 
@@ -224,51 +204,20 @@ Generate these files using the specs below, then walk the user through deploymen
 }
 ```
 
-**D) Walk through deployment with the user** — these are interactive steps:
+**D) Walk through deployment with the user:**
 
 ```
-Step 1: Login to Vercel
-  npx vercel login
-  (Browser opens — user authorises)
-
-Step 2: Deploy
-  npx vercel deploy --prod --yes
-  (Note the deployment URL — e.g., https://project-name.vercel.app)
-
-Step 3: Create a fine-grained GitHub PAT
-  Open: github.com/settings/personal-access-tokens/new
-  - Token name: <project>-feedback
-  - Repository access: Only this repo
-  - Permissions: Issues → Read and write (nothing else)
-  - Generate and copy the token
-
-Step 4: Set PAT as Vercel environment variable
-  echo "<token>" | npx vercel env add GITHUB_PAT production
-
-Step 5: Redeploy with the env var
-  npx vercel deploy --prod --yes
-
-Step 6: Set Vercel URL as GitHub repo variable
-  gh variable set FEEDBACK_WORKER_URL --body "https://<project>.vercel.app/api/feedback"
-
-Step 7: Create GitHub Issue labels
-  gh label create wiki-feedback --color 0075ca --description "Feedback submitted via wiki"
-  gh label create "type:correction" --color d73a4a --description "Something is factually wrong"
-  gh label create "type:suggestion" --color a2eeef --description "Could be improved"
-  gh label create "type:missing" --color 7057ff --description "Content should exist but doesn't"
-  gh label create "type:unclear" --color fbca04 --description "Hard to understand"
-  gh label create "needs-human-review" --color e4e669 --description "Deferred for editorial decision"
-
-Step 8: Push to trigger GitHub Pages rebuild
-  git add -A && git commit -m "Set up feedback system" && git push
-
-Step 9: Test end-to-end
-  Visit a wiki page, hover a section heading, click 💬, submit test feedback
-  Verify: gh issue list --label wiki-feedback
-  Close test issue: gh issue close <number> --comment "Setup test"
+Step 1: npx vercel login (browser opens, user authorises)
+Step 2: npx vercel deploy --prod --yes
+Step 3: Create fine-grained GitHub PAT at github.com/settings/personal-access-tokens/new
+        (token name: <project>-feedback, only this repo, Issues read+write)
+Step 4: echo "<token>" | npx vercel env add GITHUB_PAT production
+Step 5: npx vercel deploy --prod --yes (redeploy with env)
+Step 6: gh variable set FEEDBACK_WORKER_URL --body "https://<project>.vercel.app/api/feedback"
+Step 7: Create labels: gh label create wiki-feedback --color 0075ca (+ type:correction, type:suggestion, type:missing, type:unclear, needs-human-review)
+Step 8: git add -A && git commit -m "Set up feedback system" && git push
+Step 9: Test: visit wiki page, click 💬, submit, verify via gh issue list
 ```
-
-Walk through each step with the user. If any step fails, debug before proceeding to the next.
 
 ### Phase 10: Report and next steps
 
@@ -279,8 +228,9 @@ Walk through each step with the user. If any step fails, debug before proceeding
 ## Key rules
 
 - **Ingest only ONE source during init** — remaining sources are ingested in separate sessions via `/wiki-ingest`. This prevents quality degradation from context exhaustion.
+- **Structure discussion before config generation** — agree directories, page types, and quality rules before writing any config files.
 - **Check each page against quality rules immediately after writing** — do not defer quality checks to the end.
 - **Read source files directly** — do not delegate to sub-agents (they may lack file permissions).
 - **Source paths in frontmatter must be exact** — read the actual filenames from `raw/` and use them verbatim.
-- **Let the content determine structure** — do not pre-impose concept categories or entity types.
-- **Web view is optional** — the wiki's value is in the markdown pages and their interlinking. MkDocs, GitHub Pages, and the feedback system are enhancements, not requirements. Every content step must work without them.
+- **Let the content determine structure** — propose directories and types that fit the domain, not a one-size-fits-all template.
+- **Web view is optional** — the wiki's value is in the markdown pages and their interlinking. MkDocs, GitHub Pages, and the feedback system are enhancements, not requirements.
