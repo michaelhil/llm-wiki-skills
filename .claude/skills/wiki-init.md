@@ -1,31 +1,31 @@
 ---
 name: wiki-init
-description: Create a new LLM-wiki project — scaffold structure, configure web view, and ingest initial sources
+description: Create a new LLM-wiki project — scaffold structure, configure, and begin ingestion
 command: wiki-init
 ---
 
 # /wiki-init
 
-Create a new LLM-wiki from source material. This skill scaffolds the three-layer Karpathy wiki architecture (raw sources → compiled wiki → agent schema), configures MkDocs for web browsing, and performs the first ingestion.
+Create a new LLM-wiki from source material. Scaffolds the three-layer Karpathy architecture (raw sources → compiled wiki → agent schema), optionally configures MkDocs for web browsing, and ingests the first source as a quality template.
 
 ## When to use
 
 - Starting a new wiki from a collection of documents (reports, papers, notes, any readable files)
-- Setting up the infrastructure for an existing folder of markdown/PDF content
+- Setting up the infrastructure for an existing folder of content
 - Creating a team knowledge base from scratch
 
 ## Process
 
 ### Phase 1: Gather context (interactive)
 
-Ask the user these questions (skip any already answered in arguments):
+Ask the user these questions (skip any already answered):
 
 1. **What is this wiki about?** (domain, topic area)
 2. **Who is the audience?** (team, organization, expertise level)
 3. **Where are the source files?** (directory path or list of files)
 4. **Project name?** (used for directory name and site title — kebab-case)
-5. **Set up web hosting?** (GitHub Pages — yes/no)
-6. **Set up feedback system?** (per-section feedback via GitHub Issues + Vercel proxy — yes/no)
+5. **Set up web view?** (MkDocs Material for browsable site — yes/no)
+6. **Set up GitHub Pages + feedback system?** (only if web view is yes)
 
 ### Phase 2: Scaffold structure
 
@@ -36,14 +36,13 @@ Create the project directory:
 ├── raw/                    # Layer 1: Immutable sources
 ├── wiki/                   # Layer 2: Compiled knowledge
 │   ├── index.md
-│   ├── log.md
-│   ├── glossary.md
-│   └── tags.md
-├── feedback/               # Batch archives (if feedback enabled)
+│   └── log.md
 ├── wiki.config.md          # Domain context + quality rules
-├── mkdocs.yml              # MkDocs Material configuration
 └── .gitignore
 ```
+
+If web view requested, also create: `mkdocs.yml`, `wiki/glossary.md`, `wiki/tags.md`.
+If feedback requested, also create: `feedback/`.
 
 Initialize git repo.
 
@@ -55,7 +54,9 @@ Write `wiki.config.md` using the answers from Phase 1:
 # Wiki Configuration
 
 ## Domain
-<Free-text description from user answers: domain, audience, purpose>
+<Free-text description: what the wiki covers, who reads it, what level of
+explanation is appropriate. This description is used to check whether new
+sources are relevant and to guide the tone and depth of wiki pages.>
 
 ## Quality Rules
 - Summary pages: minimum 300 words
@@ -69,7 +70,7 @@ Write `wiki.config.md` using the answers from Phase 1:
 
 ### Phase 4: Generate CLAUDE.md
 
-Write the agent schema file. Use the CLAUDE.md from this skill's parent repo as a template, adapting the domain context from wiki.config.md. The schema defines:
+Write the agent schema defining:
 
 - Directory structure and purpose of each layer
 - Page format (YAML frontmatter spec: title, type, sources, related, tags, confidence, created, updated)
@@ -78,78 +79,63 @@ Write the agent schema file. Use the CLAUDE.md from this skill's parent repo as 
 - Operations: INGEST, QUERY, LINT, UPDATE, PROCESS FEEDBACK
 - Writing guidelines adapted to the domain and audience
 
-### Phase 5: Generate mkdocs.yml
+### Phase 5: Copy sources to raw/
 
-Create MkDocs Material configuration with:
+Copy all source files into `raw/`. Preserve original filenames. If there are natural groupings (reports, papers, notes), create subdirectories. Do NOT modify source files — `raw/` is immutable.
 
-- Material theme with light/dark toggle
-- `custom_dir: overrides` (for feedback system if enabled)
-- Plugins: search, tags, roamlinks
-- Extensions: admonition, tables, superfences (mermaid), tasklist, highlight
-- `wiki_version` and `feedback_worker_url` as env-injected extras
-- Nav structure: auto-generated from wiki directory after ingestion
+### Phase 6: Ingest the FIRST source thoroughly
 
-### Phase 6: Copy sources to raw/
+Pick the source that best represents the wiki's scope (ask the user if unclear). Ingest it following the full `/wiki-ingest` process:
 
-Copy all source files into `raw/`. Preserve original filenames. Do NOT modify source files — `raw/` is immutable.
+1. Read it completely
+2. Extract concepts, entities, relationships, comparisons
+3. Write all pages with full detail — check each page against quality rules IMMEDIATELY after writing
+4. This first source sets the quality bar for all subsequent ingestions
 
-### Phase 7: Ingest all sources
+**STOP after the first source.** Do not attempt to ingest all sources in one session.
 
-For EACH source file in `raw/`, run the wiki-ingest process (see `/wiki-ingest` skill). This is the bulk of the work. For each source:
+### Phase 7: Build index
 
-1. Read the source completely
-2. Identify key concepts, entities, relationships, and comparisons
-3. Write wiki pages (summaries, concepts, entities, comparisons)
-4. Interlink pages with `[[wikilinks]]`
+1. Generate `wiki/index.md` organized by page type and topic
+2. If web view: generate `wiki/glossary.md` and the `nav:` section of `mkdocs.yml`
+3. Write the initial `wiki/log.md` entry
 
-Do the ingestion DIRECTLY — do not delegate to sub-agents (they may lack file permissions).
+### Phase 8: Quality check
 
-### Phase 8: Build index and nav
-
-After all sources are ingested:
-
-1. Read all created wiki pages via `ls wiki/**/*.md`
-2. Generate `wiki/index.md` organized by page type and topic
-3. Generate `wiki/glossary.md` — alphabetical term → page reference table
-4. Generate the `nav:` section of `mkdocs.yml` from the directory structure
-5. Write the initial `wiki/log.md` entry documenting what was ingested
-
-### Phase 9: Quality check
-
-1. Run lint: check for dead `[[wikilinks]]`, orphan pages, missing frontmatter
-2. Run quality check: verify word counts against wiki.config.md minimums
-3. Fix any issues found — expand sparse pages, add missing links
+1. Lint: dead wikilinks, orphan pages, missing frontmatter
+2. Quality: word counts, link density against wiki.config.md minimums
+3. Fix any issues found
 4. Re-lint until clean
 
-### Phase 10: Infrastructure (conditional)
+### Phase 9: Infrastructure (conditional)
+
+**If web view requested** (Phase 5 in mkdocs.yml generation):
+- Create MkDocs Material configuration with search, roamlinks, dark mode toggle
+- `mkdocs build` to verify
 
 **If GitHub Pages requested:**
-- Create `.github/workflows/deploy.yml` (MkDocs build + Pages deploy, with git SHA and feedback URL injection)
-- Create `requirements.txt` with `mkdocs-material` and `mkdocs-roamlinks-plugin`
-- Create GitHub repo: `gh repo create <name> --public --source=. --push`
-- Enable Pages: `gh api repos/<owner>/<name>/pages -X POST -f build_type=workflow`
+- Create `.github/workflows/deploy.yml`
+- Create `requirements.txt`
+- Create GitHub repo, enable Pages
 
 **If feedback system requested:**
-- Create `overrides/main.html` with per-section feedback icons, popover form, and submit logic
-- Create `api/feedback.ts` (Vercel serverless function: validate POST → create GitHub Issue)
-- Create `vercel.json` (framework: null, function config)
-- Create GitHub Issue labels: `wiki-feedback`, `type:correction`, `type:suggestion`, `type:missing`, `type:unclear`, `needs-human-review`, `stale`
-- Guide user through: Vercel login, deploy, PAT creation, env variable setup
-- Update `CLAUDE.md` with PROCESS FEEDBACK operation
+- Create `overrides/main.html` with per-section feedback icons and form
+- Create `api/feedback.ts` (Vercel serverless function)
+- Create `vercel.json`
+- Create GitHub Issue labels
+- Guide user through Vercel deploy and PAT creation
 
-### Phase 11: Verify
+### Phase 10: Report and next steps
 
-1. Build MkDocs locally: `mkdocs build` (must succeed)
-2. Report final stats: total pages, pages by type, total words
-3. If GitHub Pages enabled: push and confirm deployment
-4. Print the wiki URL and next steps
+1. Report stats: pages created, word counts, source coverage
+2. List remaining sources not yet ingested
+3. Tell the user: **"Run `/wiki-ingest <source>` for each remaining source. One source per session for best quality."**
 
 ## Key rules
 
-- **Read source files DIRECTLY** — do not use sub-agents for reading (they may lack permissions)
-- **Write pages DIRECTLY** — do not use sub-agents for writing (same reason)
-- **Source paths in frontmatter must be exact** — read the actual filenames from `raw/` and use them verbatim
-- **Lint after ingestion** — every phase that creates pages must end with a lint pass
-- **Quality minimums are enforced** — if a page is under the minimum word count, expand it before moving on
-- **Let the content determine structure** — do not pre-impose concept categories or entity types. Discover them from the source material.
-- **The wiki.config.md domain description guides tone and terminology** — but the LLM's judgment determines what concepts and entities to extract
+- **Ingest only ONE source during init** — remaining sources are ingested in separate sessions via `/wiki-ingest`. This prevents quality degradation from context exhaustion.
+- **Check each page against quality rules immediately after writing** — do not defer quality checks to the end.
+- **Read source files directly** — do not delegate to sub-agents (they may lack file permissions).
+- **Source paths in frontmatter must be exact** — read the actual filenames from `raw/` and use them verbatim.
+- **Let the content determine structure** — do not pre-impose concept categories or entity types.
+- **Web view is optional** — the wiki's value is in the markdown pages and their interlinking. MkDocs, GitHub Pages, and the feedback system are enhancements, not requirements. Every content step must work without them.

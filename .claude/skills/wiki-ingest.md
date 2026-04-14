@@ -11,7 +11,7 @@ Add new source material to an existing LLM-wiki, or update the wiki when a sourc
 ## When to use
 
 - A new paper, report, article, or document should be incorporated into the wiki
-- An existing source has been revised (new version) and the wiki should reflect the changes
+- An existing source has been revised (new version) and the wiki should reflect changes
 - You want to expand the wiki's coverage of a topic
 
 ## Arguments
@@ -26,7 +26,7 @@ If no path is provided, ask the user which source to ingest.
 
 ## Prerequisites
 
-The wiki must already exist (created by `/wiki-init`). Verify by checking for `wiki.config.md` and `CLAUDE.md` in the project root.
+The wiki must already exist with a `CLAUDE.md` agent schema. If `wiki.config.md` is missing (e.g., the wiki was built before the skills were installed), offer to create it interactively before proceeding — ask for domain description and audience, then write the file.
 
 ## Process
 
@@ -34,94 +34,92 @@ The wiki must already exist (created by `/wiki-init`). Verify by checking for `w
 
 1. Read `wiki.config.md` — domain description and quality rules
 2. Read `CLAUDE.md` — page format, naming conventions, frontmatter spec
-3. List existing pages: `ls wiki/**/*.md` — know what already exists to avoid duplication and to find pages to update
+3. List existing page NAMES: `ls wiki/**/*.md` — know what exists (do not read all page content yet; read individual pages only when needed for merging)
 4. Read `wiki/index.md` — current wiki structure
 
 ### Step 2: Prepare source
 
-1. If the source is not already in `raw/`, copy it there (preserve original filename)
-2. Read the source file completely — every section, not just headers
-3. Note the exact filename as it exists in `raw/` — this will be used in frontmatter `sources:` fields
+1. If the source is not already in `raw/`:
+   - Check the existing `raw/` structure (`ls raw/`). If subdirectories exist (e.g., `raw/reports/`), ask the user where to place the file. If `raw/` is flat, copy to `raw/` root.
+   - Copy the file, preserving the original filename.
+2. Note the **exact filename as it exists in `raw/`** — this path goes in every frontmatter `sources:` field.
 
-### Step 3: Extract (LLM judgment)
+### Step 3: Domain relevance check
 
-From the source, identify:
+Read the first ~50 lines of the source (or its abstract/introduction). Compare against the domain description in `wiki.config.md`. If the source appears to be outside the wiki's domain, ask the user:
 
-- **Key concepts**: Ideas, methods, frameworks, principles, failure modes, design patterns — anything that deserves its own article. A concept is wiki-worthy if it is (a) referenced by other concepts, (b) requires explanation for the target audience, or (c) represents a significant idea in the domain.
-- **Entities**: Organizations, tools, standards, frameworks, people, systems — named things with specific identities. An entity is wiki-worthy if it is (a) referenced in multiple contexts, (b) plays a significant role in the domain, or (c) readers may need to look it up.
-- **Comparisons**: Trade-offs, alternatives, versus discussions — wherever the source compares approaches.
-- **Relationships**: How concepts and entities connect to each other and to existing wiki pages.
+> "This source appears to be about [detected topic]. This wiki covers [domain from config]. Should I proceed with ingestion?"
+
+Only continue if the user confirms. This prevents cross-domain contamination (e.g., O&G content ingested into a nuclear wiki).
+
+### Step 4: Read the source
+
+Read the source file completely. For sources over 500 lines, read in sections (one major section/chapter at a time) and process each section through Steps 5-7 before moving to the next. This keeps context focused and prevents quality degradation on later sections.
+
+### Step 5: Extract (LLM judgment)
+
+From the source (or current section), identify:
+
+- **Concepts**: Ideas, methods, frameworks, principles, failure modes, design patterns. A concept deserves its own page if (a) it would be more than one paragraph as a subsection of another page, AND (b) it is referenced from at least two other places in the source or existing wiki. When in doubt, create the separate page — pages can be merged later but splitting is harder.
+- **Entities**: Organizations, tools, standards, people, systems — named things with specific identities. An entity deserves a page if it plays a meaningful role in the domain (not just a passing mention).
+- **Comparisons**: Trade-offs, alternatives, versus discussions.
+- **Relationships**: How extracted items connect to each other and to existing wiki pages.
 
 Do NOT pre-impose categories. Let the content determine what emerges.
 
-### Step 4: Check for existing pages
+### Step 6: Check for existing pages
 
-For each extracted item, check if a wiki page already exists:
-- Search by name: `ls wiki/concepts/<name>.md`, `ls wiki/entities/<name>.md`
-- Search by content: `grep -rl "keyword" wiki/` for related pages
-- If a page exists, it will be UPDATED (merged), not replaced
-- If no page exists, it will be CREATED
+For each extracted item, check whether an equivalent wiki page already exists:
 
-### Step 5: Write summary page
+- Search by exact name: `ls wiki/concepts/<name>.md`, `ls wiki/entities/<name>.md`
+- Search by common abbreviations and aliases (e.g., "RAG" → "retrieval-augmented-generation")
+- Search by key phrases in existing page titles: `grep -rl "<phrase>" wiki/ --include="*.md" -l`
 
-Create `wiki/summaries/summary-<source-short-name>.md`:
+If a page exists → it will be UPDATED (Step 7, merge path).
+If no page exists → it will be CREATED (Step 7, new path).
 
-- YAML frontmatter: title, type: summary, sources (exact path in `raw/`), related (wikilinks to key concepts/entities), tags, confidence: high, created/updated dates
-- 300-800 words covering: what the source is about, key findings, methodology, significance for the domain
-- Link to every concept and entity page that the source contributes to
+### Step 7: Write pages
 
-### Step 6: Write concept pages
+**Write the summary page first** (`wiki/summaries/summary-<short-name>.md`):
+- 300-800 words covering what the source is about, key findings, significance
+- Link to every concept and entity page this source contributes to
+- YAML frontmatter with exact source path, related wikilinks, tags, confidence, dates
 
-For each concept extracted in Step 3:
+**Then write concept, entity, and comparison pages:**
 
-**If new page:**
-- File: `wiki/concepts/<kebab-case-name>.md`
+For EACH page, **immediately after writing it**, verify:
+- Word count meets the minimum from wiki.config.md
+- At least 3 `[[wikilinks]]` to other pages (for concepts)
+- `sources:` path in frontmatter matches actual file in `raw/`
+- If it fails any check, fix it before moving to the next page
+
+**New page path:**
+- File: `wiki/<type>/<kebab-case-name>.md`
 - YAML frontmatter with all required fields
-- 200-500 words: definition, significance, how it works, domain implications
-- Related links: `[[wikilinks]]` to at least 3 other pages
-- Source attribution in frontmatter
+- Content: definition, significance, how it works, domain implications
+- Related links to at least 3 other pages
 
-**If existing page:**
-- Read the current page
-- Add new information from this source — merge, don't replace
-- Add this source to the `sources:` list in frontmatter
-- Add any new `related:` links
-- Update the `updated:` date
-- If new information contradicts existing content, note the disagreement and cite both sources
+**Merge path (existing page):**
+Read the existing page. Read the new source material for this topic. **Rewrite the page to integrate both sources into a coherent article.** The merged page should read as if written from scratch with all sources available — not as the original with new material appended. Update the `sources:` list, add new `related:` links, update `updated:` date. If new information contradicts existing content, note the disagreement and cite both sources.
 
-### Step 7: Write entity pages
-
-Same pattern as concepts but in `wiki/entities/`. Minimum 120 words. Must explain why this entity matters in the domain context.
-
-### Step 8: Write comparison pages
-
-For trade-offs and alternatives discussed in the source:
-- File: `wiki/comparisons/<a>-vs-<b>.md`
-- Must include a comparison table with dimensions
-- 250+ words covering when to use each, trade-offs, domain recommendation
-
-### Step 9: Update index
+### Step 8: Update index and navigation
 
 1. Read current `wiki/index.md`
 2. Add entries for all new pages in appropriate sections
-3. If the source introduces a new topic area, add a new section to the index
-4. Update `wiki/glossary.md` with any new terms
+3. If the source introduces a new topic area, add a new section
+4. If `wiki/glossary.md` exists, add any new terms
+5. If `mkdocs.yml` exists, regenerate its `nav:` section from the directory structure
 
-### Step 10: Update MkDocs nav
+### Step 9: Lint
 
-Regenerate the `nav:` section in `mkdocs.yml` from the current directory structure:
-- List all `.md` files in each subdirectory of `wiki/`
-- Organize into the nav hierarchy matching the index structure
+Run across the entire wiki (not just new pages):
+1. Dead `[[wikilinks]]` pointing to nonexistent pages
+2. Orphan pages not linked from anywhere
+3. Missing frontmatter fields (title, type)
+4. Source paths that don't match actual files in `raw/`
+5. Fix any issues found. Re-lint until clean.
 
-### Step 11: Quality check
-
-1. **Word count check**: Verify every new/updated page meets the minimums from wiki.config.md
-2. **Link density**: Every concept page links to >= 3 related pages
-3. **Source paths**: Every `sources:` entry in frontmatter matches an actual file in `raw/`
-4. **Lint**: Run dead-link and orphan check across entire wiki
-5. Fix any issues found — expand sparse pages, add missing links, correct paths
-
-### Step 12: Log
+### Step 10: Log
 
 Append to `wiki/log.md`:
 
@@ -129,29 +127,29 @@ Append to `wiki/log.md`:
 ## <YYYY-MM-DD> — Ingested <source-filename>
 - Created: <list of new pages>
 - Updated: <list of modified pages>
-- New concepts: <count>
-- New entities: <count>
 ```
-
-## Key rules
-
-- **Read the full source** — not just headers or first 100 lines. Sparse pages come from incomplete reading.
-- **Read existing pages before updating** — merge information, don't overwrite.
-- **Source paths must be exact** — use the actual filename from `raw/`, not a simplified version.
-- **Lint after every ingestion** — zero dead links, zero orphans.
-- **Quality minimums are hard requirements** — if a page is under minimum, expand it immediately.
-- **Do not use sub-agents for file operations** — do all reading and writing directly.
-- **Update the index and nav** — new pages must be discoverable.
-- **Interlink aggressively** — the link graph IS the wiki's value. Every new page should connect to the existing knowledge network.
 
 ## Update mode (revised source)
 
 When a source has been revised (e.g., `report-v12.md` → `report-v13.md`):
 
-1. Copy new version to `raw/`
-2. Diff old and new versions to identify what changed
-3. Update the summary page to reflect new content
-4. Update affected concept/entity pages with new or changed information
+1. Copy new version to `raw/` (keep old version — both preserved)
+2. Read both versions. Identify what actually changed in meaning (ignore formatting)
+3. Update the summary page
+4. Update affected concept/entity pages with changed information
 5. Update `sources:` paths in frontmatter from old filename to new
-6. Do NOT delete old source from `raw/` — both versions are preserved
-7. Log the revision in `wiki/log.md`
+6. Log the revision
+
+## Key rules
+
+- **Domain relevance check before ingestion** — compare source against wiki.config.md. Ask the user if there's a mismatch.
+- **Check each page immediately after writing** — word count, link density, source path validity. Do not defer quality checks to the end.
+- **Read the full source** — not just headers. Sparse pages come from incomplete reading.
+- **For large sources (500+ lines), process section by section** — extract, check existing, write pages for one section before reading the next.
+- **Read existing pages before merging** — rewrite to integrate, don't append.
+- **Search for duplicates before creating** — check exact names, abbreviations, aliases, and key phrases.
+- **Source paths must be exact** — use the actual filename from `raw/`, verified by `ls`.
+- **Read source files directly** — do not delegate to sub-agents.
+- **Update index and nav** — new pages must be discoverable.
+- **Interlink aggressively** — the link graph IS the wiki's value.
+- **Web view is optional** — MkDocs nav and glossary updates only if those files exist.
