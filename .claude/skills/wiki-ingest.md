@@ -36,6 +36,7 @@ The wiki must already exist with a `CLAUDE.md` agent schema. If `wiki.config.md`
 2. Read `CLAUDE.md` — page format, naming conventions, frontmatter spec
 3. List existing page NAMES: `ls wiki/**/*.md` — know what exists (do not read all page content yet; read individual pages only when needed for merging)
 4. Read `wiki/index.md` — current wiki structure
+5. Read `wiki/scope.md` if it exists — know what topic areas are defined and which are covered
 
 ### Step 2: Prepare source
 
@@ -43,6 +44,7 @@ The wiki must already exist with a `CLAUDE.md` agent schema. If `wiki.config.md`
    - Check the existing `raw/` structure (`ls raw/`). If subdirectories exist (e.g., `raw/reports/`), ask the user where to place the file. If `raw/` is flat, copy to `raw/` root.
    - Copy the file, preserving the original filename.
 2. Note the **exact filename as it exists in `raw/`** — this path goes in every frontmatter `sources:` field.
+3. Check for a **guidance file**: `raw/<source-name>.notes.md`. If present, read it — it contains the user's integration direction from `/wiki-discover` (e.g., "focus on sections 3-5", "should update [[existing-page]]", "background context only"). This guidance shapes what to extract and how to integrate throughout the remaining steps.
 
 ### Step 3: Domain relevance check
 
@@ -52,9 +54,13 @@ Read the first ~50 lines of the source (or its abstract/introduction). Compare a
 
 Only continue if the user confirms. This prevents cross-domain contamination (e.g., O&G content ingested into a nuclear wiki).
 
+If a `.notes.md` guidance file exists, the user already approved this source during `/wiki-discover` — skip the relevance check.
+
 ### Step 4: Read the source
 
 Read the source file completely. For sources over 500 lines, read in sections (one major section/chapter at a time) and process each section through Steps 5-7 before moving to the next. This keeps context focused and prevents quality degradation on later sections.
+
+If guidance notes specify particular sections to focus on (e.g., "focus on sections 3-5"), read those sections first and with priority. Still read other sections but extract less aggressively from them.
 
 ### Step 5: Extract (LLM judgment)
 
@@ -120,7 +126,11 @@ If `scripts/wiki-check.ts` exists, run it: `bun run scripts/wiki-check.ts`. Othe
 5. Word counts below wiki.config.md minimums
 6. Fix any issues found. Re-run until clean.
 
-### Step 10: Log
+### Step 10: Update scope
+
+If `wiki/scope.md` exists, update it: check off any topic areas now covered by this source. Update the coverage count.
+
+### Step 11: Log
 
 Append to `wiki/log.md`:
 
@@ -128,6 +138,7 @@ Append to `wiki/log.md`:
 ## <YYYY-MM-DD> — Ingested <source-filename>
 - Created: <list of new pages>
 - Updated: <list of modified pages>
+- Guidance: <summary of .notes.md if present, or "none">
 ```
 
 ## Update mode (revised source)

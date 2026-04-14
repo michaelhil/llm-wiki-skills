@@ -1,15 +1,23 @@
 # LLM-Wiki Skills
 
-Three [Claude Code](https://docs.anthropic.com/en/docs/claude-code) skills for building and maintaining **LLM-wikis** — structured knowledge bases where an LLM compiles raw source material into interlinked markdown pages that serve both human readers and AI agents. Based on [Karpathy's LLM-wiki architecture](https://gist.github.com/karpathy/442a6bf555914893e9891c11519de94f).
+Four [Claude Code](https://docs.anthropic.com/en/docs/claude-code) skills for building and maintaining **LLM-wikis** — structured knowledge bases where an LLM compiles raw source material into interlinked markdown pages that serve both human readers and AI agents. Based on [Karpathy's LLM-wiki architecture](https://gist.github.com/karpathy/442a6bf555914893e9891c11519de94f).
+
+## Two ways to start
+
+**Have material already?** → `/wiki-init` scaffolds the wiki and compiles your documents.
+
+**Have a topic but no material?** → `/wiki-discover` helps you find, evaluate, and acquire sources through collaborative research.
 
 ## What it builds
 
 ```
 your-wiki/
 ├── raw/                    # Layer 1: Immutable source material (you curate)
-│   └── papers, reports, notes, articles...
+│   ├── papers, reports, notes, articles...
+│   └── source.notes.md    # Optional: integration guidance from /wiki-discover
 ├── wiki/                   # Layer 2: Compiled knowledge (LLM maintains)
 │   ├── index.md            # Master catalog of all pages
+│   ├── scope.md            # Topic areas and coverage tracking
 │   ├── summaries/          # One summary per source
 │   ├── concepts/           # Concept articles with cross-references
 │   ├── entities/           # Organizations, tools, standards
@@ -51,17 +59,35 @@ The skills appear in Claude Code when you open a session in the project director
 
 ## Skills
 
-### `/wiki-init` — Create a new wiki
+### `/wiki-discover` — Explore and acquire sources
 
-Start here. Run once per project.
+Start here if you have a topic but no material. Run iteratively.
+
+```
+/wiki-discover                        # Start collaborative exploration
+/wiki-discover "topic or question"    # Search for a specific topic
+/wiki-discover path/to/file.pdf       # Evaluate a specific file's fit
+```
+
+Collaboratively defines the wiki's scope, searches for relevant sources, evaluates each candidate with a fit assessment (what concepts it would add, which existing pages it would enrich, which topic gaps it fills), and acquires approved sources to `raw/`. The user controls every decision — what to include, what to skip, and how each source should be integrated.
+
+**Scope tracking**: Maintains `wiki/scope.md` with defined topic areas and coverage checkboxes. Each discovery cycle narrows the remaining gaps. Scope prevents creep — every source must map to a defined topic area, and expanding scope requires explicit user decision.
+
+**Integration guidance**: When the user has specific direction ("focus on sections 3-5", "update [[existing-page]]"), the skill writes a `.notes.md` file alongside the source that persists to the ingestion session.
+
+Can bootstrap a wiki from scratch — creates the project structure if none exists.
+
+### `/wiki-init` — Create a wiki from existing material
+
+Start here if you already have documents. Run once per project.
 
 ```
 /wiki-init
 ```
 
-Asks you interactively about domain, audience, and sources. Scaffolds the directory structure, generates the agent schema, copies sources, and ingests the **first source** thoroughly as a quality template. Optionally sets up MkDocs, GitHub Pages, and a per-section feedback system.
+Asks about domain, audience, and sources. Scaffolds the directory structure, generates the agent schema, copies sources, and ingests the **first source** thoroughly as a quality template. Optionally sets up MkDocs, GitHub Pages, and a per-section feedback system.
 
-Remaining sources are ingested one at a time via `/wiki-ingest` in separate sessions — this prevents quality degradation from context exhaustion.
+Remaining sources are ingested one at a time via `/wiki-ingest` — this prevents quality degradation from context exhaustion.
 
 ### `/wiki-ingest` — Add or update a source
 
@@ -72,9 +98,9 @@ Run per source. One source per session for best quality.
 /wiki-ingest ~/Downloads/research.pdf
 ```
 
-Reads the source, checks domain relevance against `wiki.config.md`, extracts concepts and entities, creates or updates wiki pages, cross-references with existing pages, and runs quality checks. For large sources (500+ lines), processes section by section.
+Reads the source, checks domain relevance, extracts concepts and entities, creates or updates wiki pages, and runs quality checks. If a `.notes.md` guidance file exists (from `/wiki-discover`), uses the user's integration direction to shape extraction and page creation.
 
-Handles source revisions too — when a report goes from v12 to v13, it diffs the changes and updates affected pages.
+For large sources (500+ lines), processes section by section. Handles source revisions (v12 → v13) by diffing and updating affected pages.
 
 ### `/wiki-review` — Process feedback and maintain
 
@@ -99,6 +125,7 @@ The skills enforce quality rules defined in `wiki.config.md`:
 - **Zero dead links**: Every `[[wikilink]]` resolves to an existing page
 - **Zero orphans**: Every page is linked from at least one other page
 - **Domain relevance**: New sources are checked against the wiki's domain before ingestion
+- **Scope boundary**: Every source maps to a defined topic area in `wiki/scope.md`
 
 Quality is checked **per page immediately after writing**, not deferred to the end.
 
@@ -107,6 +134,16 @@ A `scripts/wiki-check.ts` utility runs all mechanical checks in one pass:
 ```bash
 bun run scripts/wiki-check.ts
 ```
+
+## Key files
+
+| File | Purpose | Created by |
+|------|---------|-----------|
+| `wiki.config.md` | Domain description + quality rules | `/wiki-init` or `/wiki-discover` |
+| `wiki/scope.md` | Topic areas with coverage tracking | `/wiki-init` or `/wiki-discover` |
+| `CLAUDE.md` | Agent schema (ingest/query/lint/update operations) | `/wiki-init` or `/wiki-discover` |
+| `raw/<source>.notes.md` | Integration guidance for a specific source | `/wiki-discover` |
+| `feedback/batch-*.md` | Archived feedback processing records | `/wiki-review` |
 
 ## Optional: web view and feedback
 
@@ -121,7 +158,10 @@ These are enhancements. The wiki works fully without them — the core value is 
 ## Design principles
 
 - **Domain-agnostic**: Structure emerges from content, not predefined categories. Works for nuclear engineering, oil & gas, medical devices, aerospace, or any technical domain.
-- **Native tools only**: Skills use Read, Write, Grep, Glob, Bash — no custom MCP server dependency.
+- **Two entry points**: Start from existing material (`/wiki-init`) or from a topic (`/wiki-discover`). Both converge on the same wiki structure.
+- **Scope-tracked**: `wiki/scope.md` defines what the wiki covers, tracks progress, and prevents unbounded growth.
+- **User-guided**: The user controls every decision — what sources to include, how to integrate them, when to stop. The LLM is a research partner, not an autonomous agent.
+- **Native tools only**: Skills use Read, Write, Grep, Glob, Bash, WebSearch, WebFetch — no custom MCP server dependency.
 - **Direct execution**: All file operations done directly, not delegated to sub-agents (avoids permission issues in Claude Code).
 - **Content-first**: Web rendering is optional. The markdown files are the product.
 - **Quality-enforced**: Mechanical checks prevent the sparse pages and broken links that manual wiki maintenance produces.

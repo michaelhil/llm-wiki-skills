@@ -4,7 +4,11 @@
 
 <!-- Replace this with a description of your wiki's domain, audience, and purpose.
      This is free text that guides the LLM's extraction and writing style.
-     Be specific about the audience's expertise level. -->
+     Be specific about the audience's expertise level.
+     This description is used to:
+     - Check whether new sources are relevant before ingestion
+     - Guide the tone and depth of wiki pages
+     - Shape what counts as a "concept" vs background knowledge -->
 
 This wiki covers [your domain here]. The audience is [your team/audience]
 with expertise in [their background]. They may not be familiar with [areas

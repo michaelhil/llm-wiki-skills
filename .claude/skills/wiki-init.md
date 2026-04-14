@@ -10,9 +10,10 @@ Create a new LLM-wiki from source material. Scaffolds the three-layer Karpathy a
 
 ## When to use
 
-- Starting a new wiki from a collection of documents (reports, papers, notes, any readable files)
+- Starting a new wiki from a **collection of documents you already have** (reports, papers, notes, any readable files)
 - Setting up the infrastructure for an existing folder of content
-- Creating a team knowledge base from scratch
+
+**Don't have material yet?** Use `/wiki-discover` instead — it helps you find, evaluate, and acquire sources collaboratively before building the wiki.
 
 ## Process
 
@@ -36,6 +37,7 @@ Create the project directory:
 ├── raw/                    # Layer 1: Immutable sources
 ├── wiki/                   # Layer 2: Compiled knowledge
 │   ├── index.md
+│   ├── scope.md            # Topic areas and coverage tracking
 │   └── log.md
 ├── wiki.config.md          # Domain context + quality rules
 └── .gitignore
@@ -67,6 +69,10 @@ sources are relevant and to guide the tone and depth of wiki pages.>
 - Source paths in frontmatter must match actual files in raw/
 - Lint must pass after every phase (zero dead links, zero orphans)
 ```
+
+### Phase 3b: Generate wiki/scope.md
+
+Based on the source material, identify the major topic areas the wiki will cover. Write `wiki/scope.md` with checkboxes for each area. This file tracks coverage and prevents scope creep during future `/wiki-discover` sessions. Mark all topics as uncovered initially — they'll be checked off as sources are ingested.
 
 ### Phase 4: Generate CLAUDE.md
 
