@@ -112,12 +112,13 @@ Read the existing page. Read the new source material for this topic. **Rewrite t
 
 ### Step 9: Lint
 
-Run across the entire wiki (not just new pages):
+If `scripts/wiki-check.ts` exists, run it: `bun run scripts/wiki-check.ts`. Otherwise check manually across the entire wiki:
 1. Dead `[[wikilinks]]` pointing to nonexistent pages
 2. Orphan pages not linked from anywhere
 3. Missing frontmatter fields (title, type)
 4. Source paths that don't match actual files in `raw/`
-5. Fix any issues found. Re-lint until clean.
+5. Word counts below wiki.config.md minimums
+6. Fix any issues found. Re-run until clean.
 
 ### Step 10: Log
 

@@ -102,10 +102,11 @@ Pick the source that best represents the wiki's scope (ask the user if unclear).
 
 ### Phase 8: Quality check
 
+If `scripts/wiki-check.ts` exists, run it: `bun run scripts/wiki-check.ts`. Otherwise check manually:
 1. Lint: dead wikilinks, orphan pages, missing frontmatter
 2. Quality: word counts, link density against wiki.config.md minimums
 3. Fix any issues found
-4. Re-lint until clean
+4. Re-run until clean
 
 ### Phase 9: Infrastructure (conditional)
 

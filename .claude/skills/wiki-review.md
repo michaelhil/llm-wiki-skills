@@ -118,7 +118,7 @@ Body lists each item: source reference, page, section, feedback text, action tak
 
 ### Step 6: Maintenance pass
 
-Run these checks regardless of whether there was feedback:
+Run these checks regardless of whether there was feedback. If `scripts/wiki-check.ts` exists, start with `bun run scripts/wiki-check.ts` to get a full report. Then:
 
 1. **Lint**: Dead wikilinks, orphan pages, missing frontmatter
 2. **Quality**: Word counts against wiki.config.md minimums
