@@ -190,6 +190,19 @@ If your wiki was built before these skills existed:
 
 Page deletion and structural reorganisation are conversational operations — ask Claude directly. These are rare enough that formal skill steps would be over-engineering.
 
+## Using with other tools
+
+The wiki output (markdown files, frontmatter, wikilinks, MkDocs) is completely tool-agnostic. The skills are written for Claude Code but the process they describe works with any LLM coding agent. To adapt:
+
+| Claude Code | Cursor | Codex / Copilot | Generic |
+|-------------|--------|-----------------|---------|
+| `.claude/skills/*.md` | `.cursorrules` | `AGENTS.md` | Project instructions file |
+| `CLAUDE.md` (project schema) | `.cursorrules` | `AGENTS.md` | `CONVENTIONS.md` |
+| `AskUserQuestion` tool | Conversational prompts | Conversational prompts | Conversational prompts |
+| `bun run scripts/wiki-check.ts` | `npx ts-node scripts/wiki-check.ts` | Same | Any TS runner |
+
+To port: copy the skill content into your tool's instruction format. The process steps, quality rules, and wiki architecture are the same regardless of which LLM agent executes them.
+
 ## Example
 
 The [Nuclear AI Wiki](https://github.com/michaelhil/nuclear-wiki) was built with these skills — 95 interlinked pages compiled from 6 technical reports on AI agent systems for nuclear power plant operations.
