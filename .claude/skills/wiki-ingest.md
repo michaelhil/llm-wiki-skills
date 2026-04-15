@@ -47,7 +47,11 @@ The wiki must already exist with a `CLAUDE.md` agent schema. If `wiki.config.md`
 1. If the source is not already in `raw/`:
    - Check the existing `raw/` structure (`ls raw/`). If subdirectories exist (e.g., `raw/reports/`), ask the user where to place the file. If `raw/` is flat, copy to `raw/` root.
    - Copy the file, preserving the original filename.
-2. Note the **exact filename as it exists in `raw/`** — this path goes in every frontmatter `sources:` field.
+2. **Naming convention check**: If the filename doesn't follow the `AuthorOrOrg_Year_title-in-kebab-case.ext` convention (e.g., it's `report1-v12.md` or `2305.14314.pdf`), and this file hasn't been ingested before (not referenced in any existing page's `sources:` frontmatter), propose a rename:
+   > "This file is named `report1-llm-foundations-v12.md`. Rename to `Hildebrandt_2026_llm-foundations.md` for consistency? [Yes / Keep original name]"
+
+   If renamed, use the new filename from here on. If kept, proceed with the original — the convention is suggested, not enforced. Files from `/wiki-discover` already follow the convention and pass this check silently.
+3. Note the **exact filename as it exists in `raw/`** — this path goes in every frontmatter `sources:` field.
 3. **Private source check**: If the source is in `raw/private/`, it is proprietary material that should not be cited in frontmatter. Do not add it to `sources:` fields. Instead, follow the private source policy in wiki.config.md's Writing Approach — typically: write as original synthesis, cite the public works referenced within the private source, not the source itself.
 4. Check for a **guidance file**: `raw/<source-name>.notes.md` (or `raw/private/<source-name>.notes.md`). If present, read it — it contains the user's integration direction (e.g., "focus on sections 3-5", "extract general principles, not nuclear-specific framing"). This guidance shapes what to extract and how to integrate throughout the remaining steps.
 
