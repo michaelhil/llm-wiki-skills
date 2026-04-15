@@ -134,13 +134,14 @@ comprehensive reference articles drawing on broader knowledge?">
    - UPDATE: update dates, note contradictions, preserve history, log changes
    - PROCESS FEEDBACK (if feedback enabled): retrieve issues → analyse → propose → execute approved → archive
    - STRUCTURE DISCUSSION: When the user is ready to organize the wiki:
-     1. List sources in `raw/` and scan their headings/TOCs
+     1. List sources in `raw/` (including `raw/private/`) and scan their headings/TOCs
      2. Propose content directories and page types based on sources and domain
      3. Refine with user until agreed
-     4. Create agreed directories in `wiki/`
-     5. Write or update `wiki/index.md` with section headings
-     6. Add quality rules per type to `wiki.config.md`
-     7. Update the page format section of this CLAUDE.md with agreed types
+     4. Define quality rules per type (word minimums, structural requirements)
+     5. Create agreed directories in `wiki/`
+     6. Write or update `wiki/index.md` with section headings
+     7. Add quality rules per type to `wiki.config.md`
+     8. Update the page format section of this CLAUDE.md with agreed types
 
 ### Phase 5: Copy sources to raw/
 

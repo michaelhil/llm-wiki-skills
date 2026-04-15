@@ -62,7 +62,7 @@ The skills appear in Claude Code when you open a session in the project director
 
 ### `/wiki-discover` — Explore and acquire sources
 
-Start here if you have a topic but no material. Run iteratively.
+Find sources for an existing wiki. Run iteratively after `/wiki-init`.
 
 ```
 /wiki-discover                        # Start collaborative exploration
@@ -70,13 +70,11 @@ Start here if you have a topic but no material. Run iteratively.
 /wiki-discover path/to/file.pdf       # Evaluate a specific file's fit
 ```
 
-Collaboratively defines the wiki's scope, searches for relevant sources, evaluates each candidate with a fit assessment (what concepts it would add, which existing pages it would enrich, which topic gaps it fills), and acquires approved sources to `raw/`. The user controls every decision — what to include, what to skip, and how each source should be integrated.
+Searches for relevant sources, evaluates each candidate with a fit assessment (what it would add, which pages it would enrich, which gaps it fills), and acquires approved sources to `raw/`. The user controls every decision — what to include, what to skip, and how each source should be integrated.
 
-**Scope tracking**: Maintains `wiki/scope.md` with defined topic areas and coverage checkboxes. Each discovery cycle narrows the remaining gaps. Scope prevents creep — every source must map to a defined topic area, and expanding scope requires explicit user decision.
+**Scope tracking**: Maintains `wiki/scope.md` with defined topic areas and coverage checkboxes. Each discovery cycle narrows the remaining gaps.
 
 **Integration guidance**: When the user has specific direction ("focus on sections 3-5", "update [[existing-page]]"), the skill writes a `.notes.md` file alongside the source that persists to the ingestion session.
-
-Can bootstrap a wiki from scratch — creates the project structure if none exists.
 
 ### `/wiki-init` — Set up a new wiki project
 
@@ -121,10 +119,9 @@ Always includes a maintenance pass: lint, quality check, stale page detection, c
 
 The skills enforce quality rules defined in `wiki.config.md`:
 
-- **Word minimums**: Summaries ≥ 300, concepts ≥ 200, entities ≥ 120, comparisons ≥ 250
-- **Link density**: Concept pages link to ≥ 3 related pages
-- **Source traceability**: Every claim references a source file in frontmatter
-- **Path accuracy**: Source paths match actual files in `raw/`
+- **Word minimums**: Per page type, defined during structure discussion (e.g., "Theory pages: minimum 400 words")
+- **Link density**: Configurable per type (e.g., "link to >= 3 related pages")
+- **Path accuracy**: Source paths in frontmatter match actual files in `raw/`
 - **Zero dead links**: Every `[[wikilink]]` resolves to an existing page
 - **Zero orphans**: Every page is linked from at least one other page
 - **Domain relevance**: New sources are checked against the wiki's domain before ingestion
@@ -142,9 +139,9 @@ bun run scripts/wiki-check.ts
 
 | File | Purpose | Created by |
 |------|---------|-----------|
-| `wiki.config.md` | Domain description + quality rules | `/wiki-init` or `/wiki-discover` |
-| `wiki/scope.md` | Topic areas with coverage tracking | `/wiki-init` or `/wiki-discover` |
-| `CLAUDE.md` | Agent schema (ingest/query/lint/update operations) | `/wiki-init` or `/wiki-discover` |
+| `wiki.config.md` | Domain description + quality rules | `/wiki-init` |
+| `wiki/scope.md` | Topic areas with coverage tracking | `/wiki-init` (maintained by `/wiki-discover` and `/wiki-ingest`) |
+| `CLAUDE.md` | Agent schema (ingest/query/lint/update operations) | `/wiki-init` |
 | `raw/<source>.notes.md` | Integration guidance for a specific source | `/wiki-discover` |
 | `feedback/batch-*.md` | Archived feedback processing records | `/wiki-review` |
 
@@ -174,7 +171,7 @@ These are enhancements. The wiki works fully without them — the core value is 
 ## Design principles
 
 - **Domain-agnostic**: Structure emerges from content, not predefined categories. Works for nuclear engineering, oil & gas, medical devices, aerospace, or any technical domain.
-- **Two entry points**: Start from existing material (`/wiki-init`) or from a topic (`/wiki-discover`). Both converge on the same wiki structure.
+- **Single entry point**: `/wiki-init` creates the project (with or without material). `/wiki-discover` expands it.
 - **Scope-tracked**: `wiki/scope.md` defines what the wiki covers, tracks progress, and prevents unbounded growth.
 - **User-guided**: The user controls every decision — what sources to include, how to integrate them, when to stop. The LLM is a research partner, not an autonomous agent.
 - **Native tools only**: Skills use Read, Write, Grep, Glob, Bash, WebSearch, WebFetch — no custom MCP server dependency.

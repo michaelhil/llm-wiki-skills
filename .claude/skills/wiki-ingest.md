@@ -95,6 +95,7 @@ If no page exists → it will be CREATED (Step 7, new path).
 - 300-800 words covering what the source is about, key findings, significance
 - Link to every concept and entity page this source contributes to
 - YAML frontmatter with exact source path, related wikilinks, tags, confidence, dates
+- **For private sources** (`raw/private/`): do NOT write a standard summary (it would reveal proprietary content). Instead, either skip the summary entirely or write a brief general topic overview: "This wiki's coverage of [topic] is informed by proprietary research." Keep it vague — the value is in the synthesised concept pages, not in exposing the private source.
 
 **Then write concept, entity, and comparison pages:**
 

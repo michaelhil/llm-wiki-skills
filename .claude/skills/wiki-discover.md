@@ -6,12 +6,11 @@ command: wiki-discover
 
 # /wiki-discover
 
-Collaboratively explore a domain, find relevant sources, evaluate their fit, and acquire them for the wiki. Works with an existing wiki (to fill gaps) or from scratch (to define scope and find initial material).
+Collaboratively explore a domain, find relevant sources, evaluate their fit, and acquire them for an existing wiki. Requires a wiki project created by `/wiki-init`.
 
 ## When to use
 
-- Starting a new wiki with no material — "I want to build a wiki about X"
-- Expanding an existing wiki — "My wiki needs better coverage of Y"
+- Expanding a wiki — "My wiki needs better coverage of Y"
 - Evaluating a specific source — "Would this paper fit my wiki?"
 - Systematic literature/standards gathering for a topic area
 
@@ -164,6 +163,5 @@ If continuing, loop back to Step 2 (re-read scope, identify current gaps). Each 
 - **Prefer authoritative sources** — present quality tier alongside each suggestion. Flag Tier 3 sources so the user makes an informed choice.
 - **Fit assessment is speculative** — based on preview/abstract, not full document. Frame as "expected contribution" not "will add."
 - **Discovery and ingestion are separate** — discover acquires to `raw/` with notes; ingestion happens via `/wiki-ingest` in focused sessions. Exception: sources under ~200 lines can be ingested inline if the user wants.
-- **Bootstraps new wikis** — if no wiki exists, creates minimal scaffold and scope.md before starting discovery.
 - **Use AskUserQuestion** at every decision point — source evaluation, scope changes, coverage checks. Structured options, not open-ended questions.
 - **Scope prevents creep** — every source must map to a defined topic area in scope.md. If a great source falls outside scope, the user explicitly expands scope first.
