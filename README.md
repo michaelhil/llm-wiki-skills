@@ -47,9 +47,8 @@ cd llm-wiki-skills
 # Clone this repo
 git clone https://github.com/michaelhil/llm-wiki-skills.git
 
-# Copy skills into your project
-mkdir -p your-project/.claude/skills
-cp llm-wiki-skills/.claude/skills/*.md your-project/.claude/skills/
+# Copy skills into your project (each skill is a directory with SKILL.md)
+cp -r llm-wiki-skills/.claude/skills/ your-project/.claude/skills/
 
 # Optionally copy the check script
 mkdir -p your-project/scripts

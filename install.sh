@@ -17,9 +17,13 @@ if [ ! -d "$TARGET" ]; then
   exit 1
 fi
 
-# Copy skills
-mkdir -p "$TARGET/.claude/skills"
-cp "$SCRIPT_DIR/.claude/skills/"*.md "$TARGET/.claude/skills/"
+# Copy skills (each skill is a directory with SKILL.md inside)
+for skill_dir in "$SCRIPT_DIR/.claude/skills"/*/; do
+  skill_name="$(basename "$skill_dir")"
+  mkdir -p "$TARGET/.claude/skills/$skill_name"
+  cp "$skill_dir/SKILL.md" "$TARGET/.claude/skills/$skill_name/SKILL.md"
+  echo "  Installed /$(echo "$skill_name" | tr '-' '-')"
+done
 echo "Installed skills to $TARGET/.claude/skills/"
 
 # Copy check script
