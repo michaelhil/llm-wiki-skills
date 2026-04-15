@@ -33,7 +33,15 @@ Every wiki page has YAML frontmatter (title, type, sources, related pages, tags,
 
 ## Installation
 
-Copy the skill files into your project:
+### Quick install (recommended)
+
+```bash
+git clone https://github.com/michaelhil/llm-wiki-skills.git
+cd llm-wiki-skills
+./install.sh /path/to/your-project
+```
+
+### Manual install
 
 ```bash
 # Clone this repo
@@ -48,7 +56,7 @@ mkdir -p your-project/scripts
 cp llm-wiki-skills/scripts/wiki-check.ts your-project/scripts/
 ```
 
-Or add as a git submodule:
+### Git submodule
 
 ```bash
 cd your-project
@@ -56,7 +64,7 @@ git submodule add https://github.com/michaelhil/llm-wiki-skills .claude/wiki-ski
 ln -s wiki-skills/skills .claude/skills
 ```
 
-The skills appear in Claude Code when you open a session in the project directory.
+> **Important:** Skills are detected when Claude Code starts a session. If you install skills while a session is running, you must restart Claude Code for them to appear. Exit with `/exit` (or Ctrl+C) and relaunch in the project directory. Then run `/wiki-init` to get started.
 
 ## Skills
 
