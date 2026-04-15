@@ -48,7 +48,8 @@ The wiki must already exist with a `CLAUDE.md` agent schema. If `wiki.config.md`
    - Check the existing `raw/` structure (`ls raw/`). If subdirectories exist (e.g., `raw/reports/`), ask the user where to place the file. If `raw/` is flat, copy to `raw/` root.
    - Copy the file, preserving the original filename.
 2. Note the **exact filename as it exists in `raw/`** — this path goes in every frontmatter `sources:` field.
-3. Check for a **guidance file**: `raw/<source-name>.notes.md`. If present, read it — it contains the user's integration direction from `/wiki-discover` (e.g., "focus on sections 3-5", "should update [[existing-page]]", "background context only"). This guidance shapes what to extract and how to integrate throughout the remaining steps.
+3. **Private source check**: If the source is in `raw/private/`, it is proprietary material that should not be cited in frontmatter. Do not add it to `sources:` fields. Instead, follow the private source policy in wiki.config.md's Writing Approach — typically: write as original synthesis, cite the public works referenced within the private source, not the source itself.
+4. Check for a **guidance file**: `raw/<source-name>.notes.md` (or `raw/private/<source-name>.notes.md`). If present, read it — it contains the user's integration direction (e.g., "focus on sections 3-5", "extract general principles, not nuclear-specific framing"). This guidance shapes what to extract and how to integrate throughout the remaining steps.
 
 ### Step 3: Domain relevance check
 
@@ -148,6 +149,7 @@ Append to `wiki/log.md`:
 ## <YYYY-MM-DD> — Ingested <source-filename>
 - Created: <list of new pages>
 - Updated: <list of modified pages>
+- Private source: <yes/no>
 - Guidance: <summary of .notes.md if present, or "none">
 ```
 

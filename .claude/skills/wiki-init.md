@@ -35,9 +35,10 @@ Create the minimal project structure:
 ```
 <project-name>/
 ├── raw/                    # Layer 1: Immutable sources
+│   └── private/            # Proprietary material (gitignored, not cited)
 ├── wiki/                   # Layer 2: Compiled knowledge
 │   └── summaries/          # One summary per source (always present)
-└── .gitignore
+└── .gitignore              # Includes raw/private/
 ```
 
 Initialize git repo.

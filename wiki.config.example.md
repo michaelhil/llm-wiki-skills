@@ -33,6 +33,17 @@ page should cover: definition and mechanism, significance, current
 evidence, practical implications, connections to related pages,
 and open questions.
 
+<!-- Approach C: Synthesis from proprietary sources
+
+Some source material in raw/private/ is proprietary and not distributed.
+When writing pages informed by private sources:
+- Write as original synthesis, not extraction or paraphrasing
+- Cite the public works referenced within the private sources, not
+  the private sources themselves
+- Pages should stand alone for a reader with no access to private material
+
+Can be combined with Approach B for wikis that mix private and public sources. -->
+
 ## Quality Rules
 
 <!-- One rule per page type agreed in the structure discussion.

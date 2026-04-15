@@ -148,6 +148,10 @@ bun run scripts/wiki-check.ts
 | `raw/<source>.notes.md` | Integration guidance for a specific source | `/wiki-discover` |
 | `feedback/batch-*.md` | Archived feedback processing records | `/wiki-review` |
 
+## Private sources
+
+Place proprietary material in `raw/private/` — it's gitignored by default. During ingestion, private sources inform wiki pages but are not cited in frontmatter. Pages are written as original synthesis citing the public works referenced within the private material. Describe your citation policy in wiki.config.md's Writing Approach section. The ingestion log tracks which pages were informed by private sources.
+
 ## Optional: web view and feedback
 
 `/wiki-init` can optionally set up:
