@@ -125,6 +125,8 @@ For each approved source, **ask explicit user permission before any download**:
 - **Paywalled / restricted**: Inform the user. Suggest they download manually and provide the file path, then re-run `/wiki-discover path/to/downloaded-file`
 - **User-provided file** (from argument): Copy to `raw/`
 
+**Naming convention:** Name downloaded files as `AuthorOrOrg_Year_full-title-in-kebab-case.ext` (e.g., `Endsley_1995_theory-of-situation-awareness-in-dynamic-systems.pdf`). Drop leading articles ("a-", "the-", "toward-a-") but keep all substantive words. This keeps `raw/` browsable, makes frontmatter source paths informative, and avoids ambiguity between papers by the same author.
+
 After acquisition, write `.notes.md` if the user provided integration guidance.
 
 ### Step 6: Update scope
