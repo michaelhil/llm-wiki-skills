@@ -196,7 +196,9 @@ Run these checks regardless of whether there was feedback. If `scripts/wiki-chec
 4. **Coverage gaps**: Concepts mentioned in summaries but lacking their own page
 5. **Index sync**: Verify index.md lists all pages
 6. **Nav sync**: If `mkdocs.yml` exists, verify nav matches directory structure
-7. Fix any issues found
+7. **Cross-session consistency** (if wiki has 20+ pages): Spot-check 3-4 pages from different ingestion sessions for consistent depth and format. Flag conceptual overlap between pages created independently.
+8. **Scope accuracy**: Compare `wiki/scope.md` against actual page coverage — are there covered topics not checked off, or checked-off topics with thin coverage?
+9. Fix any issues found
 
 ### Step 10: Schema reflection
 

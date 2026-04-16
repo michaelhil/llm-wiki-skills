@@ -52,8 +52,8 @@ The wiki must already exist with a `CLAUDE.md` agent schema. If `wiki.config.md`
 
    If renamed, use the new filename from here on. If kept, proceed with the original — the convention is suggested, not enforced. Files from `/wiki-discover` already follow the convention and pass this check silently.
 3. Note the **exact filename as it exists in `raw/`** — this path goes in every frontmatter `sources:` field.
-3. **Private source check**: If the source is in `raw/private/`, it is proprietary material that should not be cited in frontmatter. Do not add it to `sources:` fields. Instead, follow the private source policy in wiki.config.md's Writing Approach — typically: write as original synthesis, cite the public works referenced within the private source, not the source itself.
-4. Check for a **guidance file**: `raw/<source-name>.notes.md` (or `raw/private/<source-name>.notes.md`). If present, read it — it contains the user's integration direction (e.g., "focus on sections 3-5", "extract general principles, not nuclear-specific framing"). This guidance shapes what to extract and how to integrate throughout the remaining steps.
+4. **Private source check**: If the source is in `raw/private/`, it is proprietary material that should not be cited in frontmatter. Do not add it to `sources:` fields. Instead, follow the private source policy in wiki.config.md's Writing Approach — typically: write as original synthesis, cite the public works referenced within the private source, not the source itself.
+5. Check for a **guidance file**: `raw/<source-name>.notes.md` (or `raw/private/<source-name>.notes.md`). If present, read it — it contains the user's integration direction (e.g., "focus on sections 3-5", "extract general principles, not nuclear-specific framing"). This guidance shapes what to extract and how to integrate throughout the remaining steps.
 
 ### Step 3: Domain relevance check
 
@@ -70,6 +70,17 @@ If a `.notes.md` guidance file exists, the user already approved this source dur
 Read the source file completely. For sources over 500 lines, read in sections (one major section/chapter at a time) and process each section through Steps 5-7 before moving to the next. This keeps context focused and prevents quality degradation on later sections.
 
 If guidance notes specify particular sections to focus on (e.g., "focus on sections 3-5"), read those sections first and with priority. Still read other sections but extract less aggressively from them.
+
+**For PDFs:** Academic papers have predictable structures. An efficient reading strategy:
+
+1. **Abstract + introduction (pages 1-2)**: understand the contribution, check domain relevance
+2. **Key results/findings sections**: the data and conclusions that will enrich wiki pages
+3. **Taxonomy/framework sections**: structural contributions that may reshape wiki categories
+4. **Skim or skip**: related work (rarely adds value), detailed methodology (unless the method itself is a wiki topic), appendices
+
+**For survey papers (20+ pages):** Focus on the taxonomy/classification framework and synthesis/discussion sections. Individual study descriptions rarely warrant separate extraction.
+
+**For short papers (< 10 pages):** Read completely.
 
 ### Step 5: Extract (LLM judgment)
 
@@ -93,9 +104,11 @@ For each extracted item, check whether an equivalent wiki page already exists:
 If a page exists → it will be UPDATED (Step 7, merge path).
 If no page exists → it will be CREATED (Step 7, new path).
 
+**Efficiency at scale:** If the wiki has 20+ content pages, maintain a mental map of existing page names from Step 1. Check extracted concepts against this list before running filesystem searches — only grep when the concept name doesn't obviously match any existing page title.
+
 ### Step 7: Write pages
 
-**Write the summary page first** (`wiki/summaries/summary-<short-name>.md`):
+**Write the summary page first.** The filename is derived mechanically from the source filename: strip the extension, prepend `summary-`. Example: `raw/references/Author_Year_title.pdf` → `wiki/summaries/summary-Author_Year_title.md`.
 - 300-800 words covering what the source is about, key findings, significance
 - Link to every concept and entity page this source contributes to
 - YAML frontmatter with exact source path, related wikilinks, tags, confidence, dates
@@ -119,6 +132,10 @@ For EACH page, **immediately after writing it**, verify:
 **Merge path (existing page):**
 Read the existing page. Read the new source material for this topic. **Rewrite the page to integrate both sources into a coherent article.** The merged page should read as if written from scratch with all sources available — not as the original with new material appended. Update the `sources:` list, add new `related:` links, update `updated:` date. If new information contradicts existing content, note the disagreement and cite both sources.
 
+**Merge-only sources are valid.** Some sources — particularly foundational papers or papers that deepen a single existing topic — may produce only merge targets and no new standalone pages. This is a normal outcome, not a sign of insufficient extraction. Write the summary page (always required), perform the merges, skip new page creation, and proceed to Steps 8-12.
+
+**Inline citation linking:** When a wiki page mentions a source that has a summary page, the first inline mention should link to the summary using a wikilink alias: `[[summary-Author_Year_title|Author et al. (Year)]]`. Subsequent mentions in the same page can be plain text.
+
 ### Step 8: Update index and navigation
 
 1. Read current `wiki/index.md`
@@ -126,7 +143,19 @@ Read the existing page. Read the new source material for this topic. **Rewrite t
 3. If the source introduces a new topic area, add a new section
 4. If a new page doesn't fit any existing index section, ask the user whether to create a new section or place it under the closest existing one
 5. If `wiki/glossary.md` exists, add any new terms
-6. If `mkdocs.yml` exists, regenerate its `nav:` section from the directory structure
+6. If `wiki/summaries/index.md` exists, add the new summary entry under the appropriate section heading. Format:
+   ```
+   - [[summary-Author_Year_title]]
+     Key finding or contribution in one sentence
+   ```
+   Do NOT repeat author/year after the wikilink — it is already visible in the rendered filename. Use a line break with 2-space indent (not em-dash) so the bottom-line appears on a separate line for readability.
+7. If `mkdocs.yml` exists, add new pages to the `nav:` under their section:
+   ```yaml
+   - Section Name:
+     - section/index.md                          # first, no title
+     - Page Display Title: section/page-name.md
+   ```
+   Add new pages at the end of their section (don't reorder existing entries). Use the page's title from frontmatter as the display title. Summary pages do not need individual nav entries — they're accessible via the summaries index. The Summaries entry should be a leaf page (`- Summaries: summaries/index.md`), not a section-with-index.
 
 ### Step 9: Lint
 
@@ -136,7 +165,11 @@ If `scripts/wiki-check.ts` exists, run it: `bun run scripts/wiki-check.ts`. Othe
 3. Missing frontmatter fields (title, type)
 4. Source paths that don't match actual files in `raw/`
 5. Word counts below wiki.config.md minimums
-6. Fix any issues found. Re-run until clean.
+6. Compare results to any known pre-existing issues:
+   - **New issues** (introduced by this ingestion): fix immediately
+   - **Pre-existing issues** (present before this ingestion): note but do not fix during ingestion — these are maintenance tasks for `/wiki-review`
+   - If unsure whether an issue is new or pre-existing, fix it
+   Re-run until no new issues remain.
 
 ### Step 10: Update scope
 
@@ -169,6 +202,16 @@ When a source has been revised (e.g., `report-v12.md` → `report-v13.md`):
 5. Update `sources:` paths in frontmatter from old filename to new
 6. Log the revision
 
+## Batch ingestion
+
+When processing many sources in a session:
+
+- **Always invoke `/wiki-ingest` per source** — do not process sources inline or delegate to sub-agents, regardless of how many remain.
+- **On second+ invocation in the same session**, Step 1 (Read context) can be abbreviated — context files are already loaded and any changes were made by you. Re-read only if you've lost context. On the first invocation, always read context fully.
+- **Step 3 (Domain relevance) can be skipped** for sources the user has confirmed as relevant (e.g., pre-curated collections in `raw/`, sources acquired via `/wiki-discover`).
+- **Commit periodically** (every 3-5 sources) rather than after each.
+- **For 50+ sources, expect multiple sessions.** Note progress in `wiki/log.md`.
+
 ## Key rules
 
 - **Domain relevance check before ingestion** — compare source against wiki.config.md. Ask the user if there's a mismatch.
@@ -178,7 +221,8 @@ When a source has been revised (e.g., `report-v12.md` → `report-v13.md`):
 - **Read existing pages before merging** — rewrite to integrate, don't append.
 - **Search for duplicates before creating** — check exact names, abbreviations, aliases, and key phrases.
 - **Source paths must be exact** — use the actual filename from `raw/`, verified by `ls`.
-- **Read source files directly** — do not delegate to sub-agents.
+- **Read source files directly — do not delegate to sub-agents or replicate this skill's steps manually.** Sub-agents lack the wiki's accumulated page content, quality rules, and structural conventions. They produce disconnected summaries with no merges, no cross-referencing, and no quality checks. Always invoke `/wiki-ingest` via the Skill tool for every source.
 - **Update index and nav** — new pages must be discoverable.
+- **The merge path is the core value** — enriching existing pages with new source material creates a coherent knowledge base, not a collection of disconnected summaries. Merging well is more important than creating new pages.
 - **Interlink aggressively** — the link graph IS the wiki's value.
 - **Web view is optional** — MkDocs nav and glossary updates only if those files exist.

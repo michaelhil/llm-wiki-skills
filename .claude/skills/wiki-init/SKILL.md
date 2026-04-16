@@ -123,9 +123,9 @@ comprehensive reference articles drawing on broader knowledge?">
    - `confidence` (high | medium | low)
    - `created` (date), `updated` (date)
 
-4. **Naming conventions.** Kebab-case filenames. Summaries: `summary-<short-name>.md`. No spaces, no underscores.
+4. **Naming conventions.** Kebab-case filenames for content pages. Summaries: `summary-<SourceFilename>.md` — derived mechanically from the source filename with `summary-` prepended (e.g., `Vaswani_2017_attention-is-all-you-need.pdf` → `summary-Vaswani_2017_attention-is-all-you-need.md`). Content pages: no underscores. Summary filenames may contain underscores (inherited from source filenames).
 
-5. **Interlinking.** Use `[[page-name]]` wikilinks without file extension. Cross-reference liberally.
+5. **Interlinking.** Use `[[page-name]]` wikilinks without file extension. Cross-reference liberally. Inline citations of sources with summary pages should use wikilink aliases on first mention: `[[summary-Author_Year_title|Author et al. (Year)]]`.
 
 6. **Operations:**
    - INGEST: read source → extract → write pages → update index → lint → log
@@ -149,16 +149,23 @@ If sources were provided in Phase 1, copy them into `raw/`. Preserve original fi
 
 If no sources were provided, skip this phase.
 
+### Phase 5b: Mixed source types (if applicable)
+
+If sources include both proprietary (`raw/private/`) and public material:
+
+1. Document the relationship in `wiki.config.md` Writing Approach: "Proprietary sources inform wiki structure and argumentation. Public sources provide citable evidence. Pages read as original synthesis — cite only public sources in frontmatter."
+2. **If the best structural source is proprietary:** You can still use it for first ingestion (Phase 6), but:
+   - Do not create a summary page (it would expose proprietary content)
+   - Do not add it to frontmatter `sources:` fields
+   - Cite the public works that the proprietary source itself references
+   - Pages should read as original synthesis, not summaries of the private source
+   - Alternatively, choose the best public source for Phase 6 instead
+
 ### Phase 6: Ingest the FIRST source
 
 **Only if** sources were provided in Phase 1 **AND** structure was agreed in Phase 3.
 
-Pick the source that best represents the wiki's scope (ask the user if unclear). Ingest it following the full `/wiki-ingest` process:
-
-1. Read it completely
-2. Extract based on the agreed page types and structure
-3. Write all pages with full detail — check each page against quality rules IMMEDIATELY after writing
-4. This first source sets the quality bar for all subsequent ingestions
+Pick the source that best represents the wiki's scope (ask the user if unclear). **Invoke `/wiki-ingest <path-to-source>` via the Skill tool** — do not handle ingestion inline. This ensures the first source follows the same quality process as all subsequent ingestions, establishing the pattern from the start. If skill invocation is not available mid-session, follow the full `/wiki-ingest` process inline — read the source, extract, write pages, update index, lint, and log.
 
 **STOP after the first source.** Do not attempt to ingest all sources in one session.
 
@@ -183,7 +190,13 @@ If no ingestion: skip (nothing to check).
 ### Phase 9: Infrastructure (conditional)
 
 **If web view requested:**
-- Create MkDocs Material configuration with search, roamlinks, dark mode toggle
+- Create MkDocs Material configuration with these theme features:
+  - `navigation.indexes` (section headers are clickable, index.md merges into header)
+  - `navigation.top` (back-to-top button)
+  - `search.suggest`, `search.highlight`
+  - `content.tabs.link`
+  - `toc.integrate` (page headings appear in left nav)
+  Do NOT use `navigation.sections` (makes sections non-collapsible) or `navigation.expand` (forces all sections open — clutters the sidebar as the wiki grows). Include roamlinks and dark mode toggle.
 - `mkdocs build` to verify
 
 **If GitHub Pages requested:**
@@ -193,7 +206,7 @@ If no ingestion: skip (nothing to check).
 
 **If feedback system requested:**
 
-Generate these files using the specs below, then walk the user through deployment.
+The feedback system requires manual steps (Vercel account, GitHub PAT). Ask the user: "Set up feedback now, or defer to later? The wiki works fully without it." If deferred, skip. If proceeding, generate these files using the specs below, then walk the user through deployment.
 
 **A) Create `overrides/main.html`** — MkDocs theme override:
 - Inject `<meta name="wiki-version">` from `config.extra.wiki_version`
