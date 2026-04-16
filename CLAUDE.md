@@ -1,6 +1,6 @@
 # LLM-Wiki Skills
 
-This repo contains four Claude Code skills for building and maintaining LLM-wikis — structured knowledge bases following the Karpathy three-layer architecture (raw sources → compiled wiki → agent schema).
+This repo contains five Claude Code skills for building and maintaining LLM-wikis — structured knowledge bases following the Karpathy three-layer architecture (raw sources → compiled wiki → agent schema).
 
 ## Skills
 
@@ -8,6 +8,7 @@ This repo contains four Claude Code skills for building and maintaining LLM-wiki
 - **`/wiki-init`** — Scaffold a wiki project from existing material. Start here if you already have documents.
 - **`/wiki-ingest`** — Add a new source or update from a revised source. Run per source.
 - **`/wiki-review`** — Process accumulated feedback and run maintenance. Run periodically.
+- **`/wiki-improve`** — Process GitHub Issues to iteratively improve the wiki skills themselves. Run when issues accumulate.
 
 ## Installation
 
@@ -29,7 +30,7 @@ cp scripts/wiki-check.ts /path/to/your-project/scripts/
 The skills use only native Claude Code tools (Read, Write, Grep, Glob, Bash, Edit, WebSearch, WebFetch). No custom MCP tools, no running server processes, no external dependencies beyond what Claude Code provides.
 
 ```
-Skills (process)          →  /wiki-discover, /wiki-init, /wiki-ingest, /wiki-review
+Skills (process)          →  /wiki-discover, /wiki-init, /wiki-ingest, /wiki-review, /wiki-improve
                               │
 Native tools (capabilities)  →  Read, Write, Grep, Glob, Bash, Edit, WebSearch, WebFetch
                               │

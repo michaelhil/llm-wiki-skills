@@ -1,12 +1,12 @@
 # LLM-Wiki Skills
 
-Four [Claude Code](https://docs.anthropic.com/en/docs/claude-code) skills for building and maintaining **LLM-wikis** — structured knowledge bases where an LLM compiles raw source material into interlinked markdown pages that serve both human readers and AI agents. Based on [Karpathy's LLM-wiki architecture](https://gist.github.com/karpathy/442a6bf555914893e9891c11519de94f).
+Five [Claude Code](https://docs.anthropic.com/en/docs/claude-code) skills for building and maintaining **LLM-wikis** — structured knowledge bases where an LLM compiles raw source material into interlinked markdown pages that serve both human readers and AI agents. Based on [Karpathy's LLM-wiki architecture](https://gist.github.com/karpathy/442a6bf555914893e9891c11519de94f).
 
 ## Getting started
 
 **Always start with `/wiki-init`** — it creates the wiki project, with or without initial material.
 
-Then populate: `/wiki-discover` to find sources, `/wiki-ingest` to process them, `/wiki-review` to maintain quality.
+Then populate: `/wiki-discover` to find sources, `/wiki-ingest` to process them, `/wiki-review` to maintain quality. Use `/wiki-improve` to process accumulated GitHub Issues into skill improvements.
 
 ## What it builds
 
@@ -121,6 +121,18 @@ Run periodically (e.g., every few weeks).
 Collects feedback from GitHub Issues, markdown files, or pasted text. Classifies each item as trivial (auto-applied) or substantive (proposed to the owner for approval). The owner reviews proposals grouped by page and approves, modifies, or skips each one. Only approved changes are written. Every decision is recorded in a batch archive.
 
 Always includes a maintenance pass: lint, quality check, stale page detection, coverage gaps.
+
+### `/wiki-improve` — Process issues and improve the skills
+
+Run when GitHub Issues have accumulated. This is a meta-skill: it improves the skill files themselves, not wiki content.
+
+```
+/wiki-improve                     # Full workflow: fetch, cluster, analyse, implement, release
+/wiki-improve --dry-run           # Analyse only — no changes
+/wiki-improve --issues 3,7,11    # Address specific issues
+```
+
+Fetches open issues, clusters them by shared root cause, analyses each cluster through an 11-dimension framework (root cause, architectural fit, unintended consequences, cross-skill interaction, backward compatibility, and more), then drafts changes for user approval. Includes a mandatory adversarial review (7 structured self-critique tests) and a full post-implementation audit before versioned release.
 
 ## Quality system
 
